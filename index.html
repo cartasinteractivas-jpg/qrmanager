@@ -546,6 +546,48 @@
             cursor: pointer;
         }
 
+        /* FORMULARIO DE AJUSTES */
+        .settings-form {
+            margin-bottom: 25px;
+        }
+
+        .settings-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--color-negro);
+            border-radius: 8px;
+            border: 1px solid var(--color-celeste);
+        }
+
+        .settings-item label {
+            display: block;
+            color: var(--color-celeste);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .settings-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .settings-input-wrapper input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--color-dorado);
+            border-radius: 8px;
+            background-color: var(--color-negro);
+            color: var(--color-blanco);
+            font-size: 14px;
+        }
+
+        .settings-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--color-celeste);
+            box-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
+        }
+
         /* VALIDACIÓN */
         .error-message {
             color: var(--color-rojo);
@@ -619,6 +661,7 @@
             <div class="button-group">
                 <button class="btn btn-actualizar" onclick="updateUrl()">Actualizar</button>
                 <button class="btn btn-programar" onclick="openScheduleModal()">Programar</button>
+                <button class="btn btn-programar" onclick="openSettingsModal()">Ajustes</button>
                 <button class="btn btn-cerrar" onclick="logout()">Cerrar Sesión</button>
             </div>
         </div>
@@ -637,6 +680,38 @@
             <div class="modal-buttons">
                 <button class="btn-guardar" onclick="saveSchedule()">Guardar</button>
                 <button class="btn-cancelar" onclick="closeScheduleModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AJUSTES -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cambia de usuario y contrasena</h2>
+            </div>
+
+            <div class="settings-form">
+                <div class="settings-item">
+                    <label>Usuario</label>
+                    <div class="settings-input-wrapper">
+                        <input type="text" id="settingsUser" placeholder="Usuario" readonly>
+                        <button class="edit-button" onclick="enableEditSettingsUser()">Editar</button>
+                    </div>
+                </div>
+
+                <div class="settings-item">
+                    <label>Contrasena</label>
+                    <div class="settings-input-wrapper">
+                        <input type="text" id="settingsPassword" placeholder="Contrasena" readonly>
+                        <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-guardar" onclick="updateUserSettings()">Actualizar</button>
+                <button class="btn-cancelar" onclick="closeSettingsModal()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -685,6 +760,12 @@
                 
                 if (email === testUser && password === testPassword) {
                     currentUser = { email: email };
+                    
+                    // Guardar credenciales en localStorage para futuro cotejo con Supabase
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userPassword', password);
+                    localStorage.setItem('lastUser', email);
+                    
                     loadUserData();
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainScreen').style.display = 'block';
@@ -917,17 +998,91 @@
             }
         }
 
+        // Abrir modal de ajustes
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            const userEmail = localStorage.getItem('userEmail') || '';
+            const userPassword = localStorage.getItem('userPassword') || '';
+            
+            document.getElementById('settingsUser').value = userEmail;
+            document.getElementById('settingsPassword').value = userPassword;
+            
+            modal.style.display = 'block';
+        }
+
+        // Cerrar modal de ajustes
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // Habilitar edicion de usuario en ajustes
+        function enableEditSettingsUser() {
+            const userInput = document.getElementById('settingsUser');
+            userInput.removeAttribute('readonly');
+            userInput.focus();
+            userInput.select();
+        }
+
+        // Habilitar edicion de contrasena en ajustes
+        function enableEditSettingsPassword() {
+            const passwordInput = document.getElementById('settingsPassword');
+            passwordInput.removeAttribute('readonly');
+            passwordInput.focus();
+            passwordInput.select();
+        }
+
+        // Actualizar usuario y contrasena
+        function updateUserSettings() {
+            const newUser = document.getElementById('settingsUser').value.trim();
+            const newPassword = document.getElementById('settingsPassword').value.trim();
+
+            if (!newUser || !newPassword) {
+                alert('Por favor completa tanto el usuario como la contrasena');
+                return;
+            }
+
+            // Guardar nuevas credenciales en localStorage
+            localStorage.setItem('userEmail', newUser);
+            localStorage.setItem('userPassword', newPassword);
+            localStorage.setItem('lastUser', newUser);
+            
+            // Actualizar el usuario actual
+            currentUser.email = newUser;
+
+            // Mostrar mensaje de exito
+            alert('Usuario y contrasena actualizados correctamente');
+            
+            // Cerrar modal
+            closeSettingsModal();
+            
+            // Aqui iria la actualizacion en Supabase
+            console.log('Nuevas credenciales guardadas:', { newUser, newPassword });
+        }
+
         // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
             const modal = document.getElementById('scheduleModal');
+            const settingsModal = document.getElementById('settingsModal');
             if (event.target === modal) {
                 closeScheduleModal();
             }
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
         }
 
+        // Cargar usuario guardado
+        function loadSavedUser() {
+            const lastUser = localStorage.getItem('lastUser');
+            if (lastUser) {
+                document.getElementById('email').value = lastUser;
+            }
+        }
+        
         // Inicializar
         window.addEventListener('load', () => {
             initSupabase();
+            loadSavedUser();
         });
     </script>
 </body>
