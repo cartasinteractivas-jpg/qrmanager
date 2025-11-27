@@ -1,0 +1,2 @@
+# qrmanager
+Actualiza tu qr 
