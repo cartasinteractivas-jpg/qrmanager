@@ -244,7 +244,8 @@
         if (!currentUserData) return;
         
         document.getElementById('urlInput').value = currentUserData.url_activo;
-        generateQRCode(currentUserData.url_activo);
+       generateQRCode(currentUserData.qr_imagen);
+
         renderScheduleItems();
     }
 
@@ -254,16 +255,29 @@
     }
 
     // 4. FUNCIONALIDAD DEL QR Y URL
-    function generateQRCode(url) {
-        const qrCodeDiv = document.getElementById('qrCode');
-        qrCodeDiv.innerHTML = '';
-        new QRCode(qrCodeDiv, {
-            text: url,
-            width: 180, height: 180,
-            colorDark: "#000000", colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
+   // 4. FUNCIONALIDAD DEL QR Y URL
+function generateQRCode(imageUrl) {
+    const qrCodeDiv = document.getElementById('qrCode');
+    qrCodeDiv.innerHTML = ''; // Limpiamos el contenedor por si acaso
+
+    // Verificamos si hay una URL de imagen válida
+    if (imageUrl) {
+        // Creamos un elemento de imagen
+        const img = document.createElement('img');
+        
+        // Le asignamos la URL de la columna qr_imagen
+        img.src = imageUrl; 
+        
+        // Le damos un estilo para que se ajuste al contenedor
+        img.style.width = '180px';
+        img.style.height = '180px';
+        img.style.objectFit = 'contain'; // 'contain' para que se vea completa sin deformarse
+        
+        // Añadimos la imagen al div
+        qrCodeDiv.appendChild(img);
     }
+}
+
 
     function enableEditUrl() {
         const urlInput = document.getElementById('urlInput');
@@ -406,4 +420,5 @@
 
 </body>
 </html>
+
 
