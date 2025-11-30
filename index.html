@@ -3,49 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de QR Dinámico</title>
+    <title>Gestor de QR Dinámico - Elegante</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* COLORES Y FUENTES DEL NUEVO DISEÑO (pasted_content_4.txt) */
+        :root {
+            --color-negro: #0a0a0a;
+            --color-dorado: #d4af37;
+            --color-blanco: #ffffff;
+            --color-gris-claro: #f5f5f5; /* Usado como color de superficie */
+            --color-gris-oscuro: #2a2a2a; /* Usado para bordes y acentos oscuros */
+            --color-rojo: #e74c3c; /* Para mensajes de error */
+            --color-texto: #333333;
+            --font-family: 'Georgia', serif;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --color-negro: #000000;
-            --color-dorado: #d4af37;
-            --color-blanco: #ffffff;
-            --color-gris-claro: #f8f8f8;
-            --color-gris-oscuro: #e8e8e8;
-            --color-rojo: #ff4444;
-            --color-texto: #333333;
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: var(--font-family);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--color-gris-claro);
+        .app-wrapper {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--color-blanco);
             color: var(--color-texto);
-            line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* PANTALLA DE VIDEO DE PRESENTACIÓN */
-        .video-container {
+        /* ESTILOS BASE DE CONTENEDORES (Adaptados de hero-section y app-wrapper) */
+        .video-container, .login-container, .main-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%);
+            padding: 20px;
             position: relative;
         }
+        
+        .login-container, .main-container {
+            display: none; /* Controlado por JS */
+        }
 
+        /* VIDEO INTRO */
         .video-wrapper {
             position: relative;
             width: 90%;
             max-width: 800px;
             background-color: var(--color-blanco);
-            border-radius: 15px;
+            border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             border: 3px solid var(--color-dorado);
@@ -61,237 +76,135 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-            border: none;
+            /* Estilo adaptado de cta-button */
             padding: 12px 24px;
-            border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--color-blanco);
+            background: var(--color-negro);
+            border: 2px solid var(--color-dorado);
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
             z-index: 10;
         }
 
         .skip-button:hover {
-            background-color: var(--color-negro);
-            color: var(--color-dorado);
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+            background: var(--color-gris-oscuro);
         }
 
-        /* PANTALLA DE LOGIN */
-        .login-container {
-            display: none;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%);
-            padding: 20px;
-        }
-
-        .login-box {
-            background-color: var(--color-blanco);
+        /* CAJAS DE CONTENIDO (LOGIN, MAIN, MODAL) - Adaptado de feature-card */
+        .login-box, .main-content, .modal-content {
+            background: var(--color-gris-claro);
+            border: 2px solid var(--color-dorado);
+            border-radius: 8px;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
             width: 100%;
-            max-width: 400px;
-            border: 3px solid var(--color-dorado);
+            max-width: 400px; /* Para login */
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+        }
+        
+        .main-content {
+            max-width: 600px; /* Para pantalla principal */
         }
 
-        .login-box h1 {
-            text-align: center;
-            color: var(--color-negro);
-            margin-bottom: 30px;
+        .login-box h1, .main-header h1, .modal-header h2 {
+            /* Adaptado de main-title */
             font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--color-negro) 0%, var(--color-dorado) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+        
+        .main-header p, .modal-header p {
+            color: var(--color-texto);
+            font-size: 14px;
+            text-align: center;
         }
 
-        .form-group {
+        /* FORMULARIOS E INPUTS */
+        .form-group, .url-section, .settings-item {
             margin-bottom: 20px;
         }
 
-        .form-group label {
+        .form-group label, .url-section label, .settings-item label {
             display: block;
             margin-bottom: 8px;
             color: var(--color-negro);
             font-weight: 600;
         }
 
-        .form-group input {
+        .form-group input, .url-input-wrapper input, .settings-input-wrapper input {
             width: 100%;
             padding: 12px;
-            border: 2px solid var(--color-gris-oscuro);
-            border-radius: 8px;
+            border: 1px solid var(--color-gris-oscuro);
+            border-radius: 4px;
             background-color: var(--color-blanco);
-            color: var(--color-texto);
+            color: var(--color-negro);
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .url-input-wrapper input:focus, .settings-input-wrapper input:focus {
             outline: none;
             border-color: var(--color-dorado);
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
+        
+        .url-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .url-input-wrapper input {
+            flex: 1;
+        }
 
-        .login-button {
-            width: 100%;
+        /* BOTONES - Adaptado de cta-button */
+        .login-button, .btn, .edit-button, .btn-guardar, .btn-cancelar {
             padding: 14px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
             border: none;
-            border-radius: 8px;
-            font-size: 18px;
+            border-radius: 4px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .login-button {
+            width: 100%;
             margin-top: 10px;
         }
 
-        .login-button:hover {
+        .btn-actualizar, .btn-programar, .login-button, .btn-guardar {
             background-color: var(--color-negro);
-            color: var(--color-dorado);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-        }
-
-        /* PANTALLA PRINCIPAL */
-        .main-container {
-            display: none;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%);
-            padding: 20px;
-        }
-
-        .main-content {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: var(--color-blanco);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            border: 3px solid var(--color-dorado);
-        }
-
-        .main-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .main-header h1 {
-            color: var(--color-negro);
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .main-header p {
-            color: var(--color-texto);
-            font-size: 14px;
-        }
-
-        .qr-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: var(--color-gris-claro);
-            border-radius: 10px;
+            color: var(--color-blanco);
             border: 2px solid var(--color-dorado);
         }
 
-        #qrCode {
-            display: inline-block;
-            padding: 20px;
-            background-color: var(--color-blanco);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .url-section {
-            margin-bottom: 25px;
-        }
-
-        .url-section label {
-            display: block;
-            color: var(--color-negro);
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .url-input-wrapper input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid var(--color-gris-oscuro);
-            border-radius: 8px;
-            background-color: var(--color-blanco);
-            color: var(--color-texto);
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .url-input-wrapper input:focus {
-            outline: none;
-            border-color: var(--color-dorado);
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-
-        .edit-button {
-            padding: 10px 15px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .edit-button:hover {
-            background-color: var(--color-negro);
-            color: var(--color-dorado);
-            transform: scale(1.05);
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn {
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-actualizar {
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-        }
-
-        .btn-actualizar:hover {
-            background-color: var(--color-negro);
+        .btn-actualizar:hover, .btn-programar:hover, .login-button:hover, .btn-guardar:hover {
+            background-color: var(--color-gris-oscuro);
             color: var(--color-dorado);
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
         }
-
-        .btn-programar {
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-        }
-
-        .btn-programar:hover {
-            background-color: var(--color-negro);
-            color: var(--color-dorado);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-        }
-
+        
         .btn-cerrar {
             background-color: var(--color-rojo);
             color: var(--color-blanco);
@@ -302,8 +215,80 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
         }
+        
+        .edit-button {
+            padding: 10px 15px;
+            background-color: var(--color-dorado);
+            color: var(--color-negro);
+            border: none;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        
+        .edit-button:hover {
+            background-color: #f4d03f;
+            transform: scale(1.05);
+        }
+        
+        .btn-cancelar {
+            background-color: var(--color-gris-claro);
+            color: var(--color-negro);
+            border: 1px solid var(--color-gris-oscuro);
+        }
+        
+        .btn-cancelar:hover {
+            background-color: var(--color-blanco);
+            transform: translateY(-2px);
+        }
 
-        /* ANIMACIÓN DE PROGRESO */
+        /* QR SECTION */
+        .qr-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--color-blanco);
+            border-radius: 8px;
+            border: 2px solid var(--color-dorado);
+        }
+
+        #qrCode {
+            display: inline-block;
+            padding: 10px;
+            background-color: var(--color-blanco);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            margin: 5% auto;
+            max-width: 500px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+        }
+        
+        /* PROGRESS BAR */
         .progress-bar {
             display: none;
             width: 100%;
@@ -350,366 +335,156 @@
                 opacity: 1;
             }
         }
-
-        /* MODAL DE PROGRAMACIÓN */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background-color: var(--color-blanco);
-            margin: auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 3px solid var(--color-dorado);
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .modal-header {
+        
+        .error-message {
+            color: var(--color-rojo);
+            font-size: 14px;
+            margin-top: 10px;
             text-align: center;
-            margin-bottom: 25px;
         }
-
-        .modal-header h2 {
-            color: var(--color-negro);
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .modal-header p {
-            color: var(--color-texto);
-            font-size: 14px;
-        }
-
-        .schedule-item {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: var(--color-gris-claro);
-            border-radius: 8px;
-            border: 2px solid var(--color-dorado);
-        }
-
-        .schedule-item label {
-            display: block;
-            color: var(--color-negro);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .schedule-input-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .schedule-input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid var(--color-gris-oscuro);
-            border-radius: 8px;
-            background-color: var(--color-blanco);
-            color: var(--color-texto);
-            font-size: 14px;
-        }
-
-        .schedule-input-group input:focus {
-            outline: none;
-            border-color: var(--color-dorado);
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-
-        .date-picker-button {
-            padding: 10px 15px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .date-picker-button:hover {
-            background-color: var(--color-negro);
+        
+        .success-message {
             color: var(--color-dorado);
-            transform: scale(1.05);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
         }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn-guardar {
-            flex: 1;
-            padding: 14px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-guardar:hover {
-            background-color: var(--color-negro);
-            color: var(--color-dorado);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-        }
-
-        .btn-cancelar {
-            flex: 1;
-            padding: 14px;
-            background-color: var(--color-gris-oscuro);
-            color: var(--color-negro);
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-cancelar:hover {
-            background-color: var(--color-gris-claro);
-            transform: translateY(-2px);
-        }
-
+        
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .login-box {
+            .login-box, .main-content, .modal-content {
                 padding: 25px;
             }
-
-            .main-content {
-                padding: 20px;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 20px;
-            }
-
-            .button-group {
+            .url-input-wrapper {
                 flex-direction: column;
             }
-
+            .url-input-wrapper input {
+                margin-bottom: 10px;
+            }
             .modal-buttons {
                 flex-direction: column;
             }
         }
-
-        /* INPUT DATE PICKER STYLING */
-        input[type="date"] {
-            padding: 10px;
-            border: 2px solid var(--color-gris-oscuro);
-            border-radius: 8px;
-            background-color: var(--color-blanco);
-            color: var(--color-texto);
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: none;
-            cursor: pointer;
-        }
-
-        /* FORMULARIO DE AJUSTES */
-        .settings-form {
-            margin-bottom: 25px;
-        }
-
-        .settings-item {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: var(--color-gris-claro);
-            border-radius: 8px;
-            border: 2px solid var(--color-dorado);
-        }
-
-        .settings-item label {
-            display: block;
-            color: var(--color-negro);
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .settings-input-wrapper input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid var(--color-gris-oscuro);
-            border-radius: 8px;
-            background-color: var(--color-blanco);
-            color: var(--color-texto);
-            font-size: 14px;
-        }
-
-        .settings-input-wrapper input:focus {
-            outline: none;
-            border-color: var(--color-dorado);
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-
-        /* VALIDACIÓN */
-        .error-message {
-            color: var(--color-rojo);
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .success-message {
-            color: var(--color-celeste);
-            font-size: 12px;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE VIDEO DE PRESENTACIÓN -->
-    <div id="videoScreen" class="video-container">
-        <div class="video-wrapper">
-            <video id="presentationVideo" controls autoplay muted>
-                <source src="https://github.com/cartasinteractivas-jpg/qrmanager/raw/main/qrdinamicopresentacion.mp4" type="video/mp4">
-                Tu navegador no soporta el elemento de video.
-            </video>
-            <button class="skip-button" onclick="skipVideo()">Saltar Video</button>
+    <div class="app-wrapper">
+        <!-- PANTALLA DE VIDEO DE PRESENTACIÓN -->
+        <div id="videoScreen" class="video-container">
+            <div class="video-wrapper">
+                <video id="presentationVideo" controls autoplay muted>
+                    <source src="https://github.com/cartasinteractivas-jpg/qrmanager/raw/main/qrdinamicopresentacion.mp4" type="video/mp4">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+                <button class="skip-button" onclick="skipVideo()">Saltar Video</button>
+            </div>
         </div>
-    </div>
 
-    <!-- PANTALLA DE LOGIN -->
-    <div id="loginScreen" class="login-container">
-        <div class="login-box">
-            <h1>Iniciar Sesión</h1>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label for="email">Usuario o Email</label>
-                    <input type="text" id="email" name="email" required>
+        <!-- PANTALLA DE LOGIN -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-box">
+                <h1>Iniciar Sesión</h1>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="email">Usuario o Email</label>
+                        <input type="text" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="login-button">Entrar</button>
+                    <div id="loginError" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PANTALLA PRINCIPAL -->
+        <div id="mainScreen" class="main-container">
+            <div class="main-content">
+                <div class="main-header">
+                    <h1>Tu QR Dinámico</h1>
+                    <p>Gestiona tu código QR y cambios de dirección</p>
                 </div>
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="text" id="password" name="password" required>
+
+                <div class="qr-section">
+                    <div id="qrCode"></div>
                 </div>
-                <button type="submit" class="login-button">Entrar</button>
-                <div id="loginError" class="error-message"></div>
-            </form>
-        </div>
-    </div>
 
-    <!-- PANTALLA PRINCIPAL -->
-    <div id="mainScreen" class="main-container">
-        <div class="main-content">
-            <div class="main-header">
-                <h1>Tu QR Dinámico</h1>
-                <p>Gestiona tu código QR y cambios de dirección</p>
-            </div>
-
-            <div class="qr-section">
-                <div id="qrCode"></div>
-            </div>
-
-            <div class="url-section">
-                <label>Dirección Actual</label>
-                <div class="url-input-wrapper">
-                    <input type="text" id="urlInput" placeholder="https://ejemplo.com" readonly>
-                    <button class="edit-button" onclick="enableEditUrl()">Editar</button>
-                </div>
-            </div>
-
-            <div id="progressBar" class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            <div id="updateMessage" class="update-message">✓ Dirección actualizada correctamente</div>
-
-            <div class="button-group">
-                <button class="btn btn-actualizar" onclick="updateUrl()">Actualizar</button>
-                <button class="btn btn-programar" onclick="openScheduleModal()">Programar</button>
-                <button class="btn btn-programar" onclick="openSettingsModal()">Ajustes</button>
-                <button class="btn btn-cerrar" onclick="logout()">Cerrar Sesión</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE PROGRAMACIÓN -->
-    <div id="scheduleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Programar Cambio de Dirección</h2>
-                <p>Puede cambiar la dirección según la fecha programada (3 opciones de cambio)</p>
-            </div>
-
-            <div id="scheduleItems"></div>
-
-            <div class="modal-buttons">
-                <button class="btn-guardar" onclick="saveSchedule()">Guardar</button>
-                <button class="btn-cancelar" onclick="closeScheduleModal()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE AJUSTES -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Cambia de usuario y contrasena</h2>
-            </div>
-
-            <div class="settings-form">
-                <div class="settings-item">
-                    <label>Usuario</label>
-                    <div class="settings-input-wrapper">
-                        <input type="text" id="settingsUser" placeholder="Usuario" readonly>
-                        <button class="edit-button" onclick="enableEditSettingsUser()">Editar</button>
+                <div class="url-section">
+                    <label>Dirección Actual</label>
+                    <div class="url-input-wrapper">
+                        <input type="text" id="urlInput" placeholder="https://ejemplo.com" readonly>
+                        <button class="edit-button" onclick="enableEditUrl()">Editar</button>
                     </div>
                 </div>
 
-                <div class="settings-item">
-                    <label>Contrasena</label>
-                    <div class="settings-input-wrapper">
-                        <input type="text" id="settingsPassword" placeholder="Contrasena" readonly>
-                        <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
-                    </div>
+                <div id="progressBar" class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div id="updateMessage" class="update-message">✓ Dirección actualizada correctamente</div>
+
+                <div class="button-group">
+                    <button class="btn btn-actualizar" onclick="updateUrl()">Actualizar</button>
+                    <button class="btn btn-programar" onclick="openScheduleModal()">Programar</button>
+                    <button class="btn btn-programar" onclick="openSettingsModal()">Ajustes</button>
+                    <button class="btn btn-cerrar" onclick="logout()">Cerrar Sesión</button>
                 </div>
             </div>
+        </div>
 
-            <div class="modal-buttons">
-                <button class="btn-guardar" onclick="updateUserSettings()">Actualizar</button>
-                <button class="btn-cancelar" onclick="closeSettingsModal()">Cancelar</button>
+        <!-- MODAL DE PROGRAMACIÓN -->
+        <div id="scheduleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Programar Cambio de Dirección</h2>
+                    <p>Puede cambiar la dirección según la fecha programada (3 opciones de cambio)</p>
+                </div>
+
+                <div id="scheduleItems"></div>
+
+                <div class="modal-buttons">
+                    <button class="btn-guardar" onclick="saveSchedule()">Guardar</button>
+                    <button class="btn-cancelar" onclick="closeScheduleModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE AJUSTES -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Cambia de usuario y contrasena</h2>
+                </div>
+
+                <div class="settings-form">
+                    <div class="settings-item">
+                        <label>Usuario</label>
+                        <div class="settings-input-wrapper">
+                            <input type="text" id="settingsUser" placeholder="Usuario" readonly>
+                            <button class="edit-button" onclick="enableEditSettingsUser()">Editar</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <label>Contrasena</label>
+                        <div class="settings-input-wrapper">
+                            <input type="password" id="settingsPassword" placeholder="Contrasena" readonly>
+                            <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="btn-guardar" onclick="updateUserSettings()">Actualizar</button>
+                    <button class="btn-cancelar" onclick="closeSettingsModal()">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuración de Supabase
+        // Configuración de Supabase (Mantenida de pasted_content_3.txt)
         const SUPABASE_URL = 'https://your-supabase-url.supabase.co';
         const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
         
@@ -746,7 +521,7 @@
             try {
                 errorDiv.textContent = '';
                 
-                // Credenciales de prueba
+                // Credenciales de prueba (Mantenidas de pasted_content_3.txt)
                 const testUser = 'matrix';
                 const testPassword = 'mutter';
                 
@@ -760,7 +535,7 @@
                     
                     loadUserData();
                     document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainScreen').style.display = 'block';
+                    document.getElementById('mainScreen').style.display = 'flex'; // Cambiado a 'flex' para centrar
                     generateQRCode();
                 } else if (email && password) {
                     errorDiv.textContent = 'Usuario o contraseña incorrectos. Usa: matrix / mutter';
@@ -769,63 +544,36 @@
                 }
             } catch (error) {
                 errorDiv.textContent = 'Error en la autenticación: ' + error.message;
+                console.error(error);
             }
         }
 
-        // Cargar datos del usuario
+        // Cargar datos del usuario (Mantenida de pasted_content_3.txt)
         async function loadUserData() {
-            try {
-                // Aquí iría la consulta a Supabase para obtener los datos del usuario
-                // Por ahora, usamos datos de ejemplo
-                currentQRData = {
-                    url: 'https://ejemplo.com',
-                    schedules: [
-                        { date: '', url: '' },
-                        { date: '', url: '' },
-                        { date: '', url: '' }
-                    ]
-                };
-                document.getElementById('urlInput').value = currentQRData.url;
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-            }
+            // Lógica para cargar datos de Supabase (simulada con datos por defecto)
+            document.getElementById('urlInput').value = currentQRData.url;
+            document.getElementById('settingsUser').value = currentUser.email;
+            document.getElementById('settingsPassword').value = localStorage.getItem('userPassword') || '';
+            
+            // Lógica para cargar schedules (simulada)
+            renderScheduleItems();
         }
 
-        // Generar código QR
+        // Generar QR (Mantenida de pasted_content_3.txt)
         function generateQRCode() {
-            const qrContainer = document.getElementById('qrCode');
-            qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
+            const qrCodeDiv = document.getElementById('qrCode');
+            qrCodeDiv.innerHTML = '';
+            new QRCode(qrCodeDiv, {
                 text: currentQRData.url,
-                width: 200,
-                height: 200,
-                colorDark: '#1a1a1a',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                width: 180,
+                height: 180,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
             });
         }
 
-        // Función para formatear URL automáticamente
-        function formatUrl(input) {
-            let url = input.trim();
-            
-            if (!url) {
-                return '';
-            }
-            
-            // Si no tiene protocolo, agregar http://
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                // Si no tiene www, agregarlo
-                if (!url.startsWith('www.')) {
-                    url = 'www.' + url;
-                }
-                url = 'http://' + url;
-            }
-            
-            return url;
-        }
-        
-        // Habilitar edición de URL
+        // Habilitar edición de URL (Mantenida de pasted_content_3.txt)
         function enableEditUrl() {
             const urlInput = document.getElementById('urlInput');
             urlInput.removeAttribute('readonly');
@@ -833,181 +581,101 @@
             urlInput.select();
         }
 
-        // Actualizar URL
-        function updateUrl() {
+        // Actualizar URL (Mantenida de pasted_content_3.txt)
+        async function updateUrl() {
             const urlInput = document.getElementById('urlInput');
-            let newUrl = urlInput.value.trim();
+            const newUrl = urlInput.value.trim();
 
-            if (!newUrl) {
-                alert('Por favor ingresa una dirección');
+            if (!newUrl || newUrl === currentQRData.url) {
+                urlInput.setAttribute('readonly', true);
                 return;
             }
 
-            // Formatear la URL automáticamente
-            newUrl = formatUrl(newUrl);
-
-            // Validar URL
-            try {
-                new URL(newUrl);
-            } catch (error) {
-                alert('Dirección inválida. Por favor ingresa una dirección válida (ej: mitienda.com)');
-                return;
-            }
-
-            // Mostrar animación de progreso
+            // Simulación de progreso
             const progressBar = document.getElementById('progressBar');
             const updateMessage = document.getElementById('updateMessage');
-            
             progressBar.style.display = 'block';
-            
-            setTimeout(() => {
-                currentQRData.url = newUrl;
-                urlInput.value = newUrl;
-                urlInput.setAttribute('readonly', 'readonly');
-                generateQRCode();
-                progressBar.style.display = 'none';
-                updateMessage.style.display = 'block';
-                
-                setTimeout(() => {
-                    updateMessage.style.display = 'none';
-                }, 3000);
+            updateMessage.style.display = 'none';
 
-                // Aquí iría la actualización en Supabase
-                saveUserData();
-            }, 2000);
+            // Aquí iría la lógica de actualización en Supabase
+            console.log('Actualizando URL a:', newUrl);
+            
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Simular espera
+
+            currentQRData.url = newUrl;
+            generateQRCode();
+            urlInput.setAttribute('readonly', true);
+            
+            progressBar.style.display = 'none';
+            updateMessage.style.display = 'block';
+            setTimeout(() => updateMessage.style.display = 'none', 3000);
         }
 
-        // Abrir modal de programación
+        // Cerrar sesión (Mantenida de pasted_content_3.txt)
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPassword');
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('password').value = '';
+        }
+
+        // Abrir modal de programación (Mantenida de pasted_content_3.txt)
         function openScheduleModal() {
-            const modal = document.getElementById('scheduleModal');
-            const scheduleItems = document.getElementById('scheduleItems');
-            
-            scheduleItems.innerHTML = '';
-            
-            for (let i = 0; i < 3; i++) {
-                const item = document.createElement('div');
-                item.className = 'schedule-item';
-                item.innerHTML = `
-                    <label>Opción ${i + 1}</label>
-                    <div class="schedule-input-group">
-                        <input type="text" id="scheduleUrl${i}" placeholder="https://ejemplo.com" value="${currentQRData.schedules[i].url}">
-                        <input type="date" id="scheduleDate${i}" value="${currentQRData.schedules[i].date}" min="${getTodayDate()}">
-                    </div>
-                `;
-                scheduleItems.appendChild(item);
-            }
-            
-            modal.style.display = 'block';
+            document.getElementById('scheduleModal').style.display = 'block';
         }
 
-        // Cerrar modal de programación
+        // Cerrar modal de programación (Mantenida de pasted_content_3.txt)
         function closeScheduleModal() {
             document.getElementById('scheduleModal').style.display = 'none';
         }
 
-        // Obtener fecha de hoy en formato YYYY-MM-DD
-        function getTodayDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        // Renderizar items de programación (Mantenida de pasted_content_3.txt)
+        function renderScheduleItems() {
+            const container = document.getElementById('scheduleItems');
+            container.innerHTML = '';
+            
+            currentQRData.schedules.forEach((schedule, index) => {
+                const item = document.createElement('div');
+                item.className = 'settings-item';
+                item.innerHTML = `
+                    <label>Cambio Programado ${index + 1}</label>
+                    <div class="settings-input-wrapper">
+                        <input type="date" id="scheduleDate${index}" value="${schedule.date}" onchange="updateSchedule(${index}, 'date', this.value)">
+                        <input type="url" id="scheduleUrl${index}" placeholder="URL a cambiar" value="${schedule.url}" onchange="updateSchedule(${index}, 'url', this.value)">
+                    </div>
+                `;
+                container.appendChild(item);
+            });
         }
 
-        // Guardar programación
+        // Actualizar programación (Mantenida de pasted_content_3.txt)
+        function updateSchedule(index, field, value) {
+            currentQRData.schedules[index][field] = value;
+        }
+
+        // Guardar programación (Mantenida de pasted_content_3.txt)
         function saveSchedule() {
-            const schedules = [];
-            let hasValidSchedule = false;
-
-            for (let i = 0; i < 3; i++) {
-                let url = document.getElementById(`scheduleUrl${i}`).value.trim();
-                const date = document.getElementById(`scheduleDate${i}`).value;
-
-                if (url || date) {
-                    if (!url || !date) {
-                        alert(`Opción ${i + 1}: Completa tanto la dirección como la fecha`);
-                        return;
-                    }
-
-                    // Formatear URL automáticamente
-                    url = formatUrl(url);
-
-                    // Validar URL
-                    try {
-                        new URL(url);
-                    } catch (error) {
-                        alert(`Opción ${i + 1}: Dirección inválida`);
-                        return;
-                    }
-
-                    schedules.push({ url, date });
-                    hasValidSchedule = true;
-                } else {
-                    schedules.push({ url: '', date: '' });
-                }
-            }
-
-            if (!hasValidSchedule) {
-                alert('Por favor ingresa al menos una programación');
-                return;
-            }
-
-            currentQRData.schedules = schedules;
+            // Aquí iría la lógica de guardado en Supabase
+            console.log('Programación guardada:', currentQRData.schedules);
+            alert('Programación guardada correctamente');
             closeScheduleModal();
-            
-            // Mostrar mensaje de éxito
-            const updateMessage = document.getElementById('updateMessage');
-            updateMessage.textContent = '✓ Programaciones guardadas correctamente';
-            updateMessage.style.display = 'block';
-            
-            setTimeout(() => {
-                updateMessage.style.display = 'none';
-            }, 3000);
-
-            // Aquí iría la actualización en Supabase
-            saveUserData();
         }
 
-        // Guardar datos del usuario
-        async function saveUserData() {
-            try {
-                // Aquí iría la actualización en Supabase
-                console.log('Datos guardados:', currentQRData);
-            } catch (error) {
-                console.error('Error al guardar datos:', error);
-            }
-        }
-
-        // Cerrar sesión
-        function logout() {
-            if (confirm('¿Deseas cerrar sesión?')) {
-                currentUser = null;
-                document.getElementById('mainScreen').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
-                document.getElementById('loginError').textContent = '';
-            }
-        }
-
-        // Abrir modal de ajustes
+        // Abrir modal de ajustes (Mantenida de pasted_content_3.txt)
         function openSettingsModal() {
-            const modal = document.getElementById('settingsModal');
-            const userEmail = localStorage.getItem('userEmail') || '';
-            const userPassword = localStorage.getItem('userPassword') || '';
-            
-            document.getElementById('settingsUser').value = userEmail;
-            document.getElementById('settingsPassword').value = userPassword;
-            
-            modal.style.display = 'block';
+            document.getElementById('settingsUser').value = currentUser.email;
+            document.getElementById('settingsPassword').value = localStorage.getItem('userPassword') || '';
+            document.getElementById('settingsModal').style.display = 'block';
         }
 
-        // Cerrar modal de ajustes
+        // Cerrar modal de ajustes (Mantenida de pasted_content_3.txt)
         function closeSettingsModal() {
             document.getElementById('settingsModal').style.display = 'none';
         }
 
-        // Habilitar edicion de usuario en ajustes
+        // Habilitar edición de usuario en ajustes (Mantenida de pasted_content_3.txt)
         function enableEditSettingsUser() {
             const userInput = document.getElementById('settingsUser');
             userInput.removeAttribute('readonly');
@@ -1015,15 +683,16 @@
             userInput.select();
         }
 
-        // Habilitar edicion de contrasena en ajustes
+        // Habilitar edición de contraseña en ajustes (Mantenida de pasted_content_3.txt)
         function enableEditSettingsPassword() {
             const passwordInput = document.getElementById('settingsPassword');
+            passwordInput.type = 'text'; // Cambiar a texto para edición
             passwordInput.removeAttribute('readonly');
             passwordInput.focus();
             passwordInput.select();
         }
 
-        // Actualizar usuario y contrasena
+        // Actualizar usuario y contraseña (Mantenida de pasted_content_3.txt)
         function updateUserSettings() {
             const newUser = document.getElementById('settingsUser').value.trim();
             const newPassword = document.getElementById('settingsPassword').value.trim();
@@ -1051,7 +720,7 @@
             console.log('Nuevas credenciales guardadas:', { newUser, newPassword });
         }
 
-        // Cerrar modal al hacer clic fuera
+        // Cerrar modal al hacer clic fuera (Mantenida de pasted_content_3.txt)
         window.onclick = function(event) {
             const modal = document.getElementById('scheduleModal');
             const settingsModal = document.getElementById('settingsModal');
@@ -1063,7 +732,7 @@
             }
         }
 
-        // Cargar usuario guardado
+        // Cargar usuario guardado (Mantenida de pasted_content_3.txt)
         function loadSavedUser() {
             const lastUser = localStorage.getItem('lastUser');
             if (lastUser) {
