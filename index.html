@@ -310,7 +310,9 @@ function generateQRCode(imageUrl) {
             if (error) throw error;
 
             currentUserData.url_activo = newUrl; // Actualizamos nuestros datos locales
-            generateQRCode(newUrl);
+            // ¡CORRECCIÓN! Usamos la URL de la imagen que ya tenemos, no la nueva URL de texto.
+generateQRCode(currentUserData.qr_imagen);
+
             urlInput.readOnly = true;
             
             progressBar.style.display = 'none';
@@ -333,31 +335,75 @@ function generateQRCode(imageUrl) {
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
 
-    function renderScheduleItems() {
-        const container = document.getElementById('scheduleItems');
-        container.innerHTML = '';
-        for (let i = 1; i <= 3; i++) {
-            const dateValue = currentUserData[`programa${i}`] ? currentUserData[`programa${i}`].split('T')[0] : '';
-            const urlValue = currentUserData[`url_programado${i}`] || '';
-            
-            const item = document.createElement('div');
-            item.className = 'settings-item';
-            item.innerHTML = `
-                <label>Cambio Programado ${i}</label>
-                <div class="settings-input-wrapper">
-                    <input type="datetime-local" id="scheduleDate${i}" value="${dateValue ? new Date(dateValue).toISOString().substring(0, 16) : ''}">
-                    <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
-                </div>
-            `;
-            container.appendChild(item);
+    // Reemplaza la función original con esta
+function renderScheduleItems() {
+    const container = document.getElementById('scheduleItems');
+    container.innerHTML = '';
+
+    // 1. OBTENER LA FECHA Y HORA ACTUAL EN FORMATO LOCAL
+    const now = new Date();
+    // Ajustamos la zona horaria para que coincida con la del usuario
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    // Formateamos a 'YYYY-MM-DDTHH:MM' que es lo que el input necesita
+    const minDateTime = now.toISOString().slice(0, 16);
+
+    for (let i = 1; i <= 3; i++) {
+        // Obtenemos los valores guardados de la base de datos
+        const savedTimestamp = currentUserData[`programa${i}`];
+        let savedDate = '';
+        let savedTime = '';
+
+        if (savedTimestamp) {
+            const d = new Date(savedTimestamp);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            savedDate = d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+            savedTime = d.toISOString().split('T')[1].slice(0, 5); // 'HH:MM'
         }
+        
+        const urlValue = currentUserData[`url_programado${i}`] || '';
+        
+        const item = document.createElement('div');
+        item.className = 'settings-item';
+        
+        // 2. CREAMOS DOS INPUTS SEPARADOS: UNO PARA FECHA Y OTRO PARA HORA
+        item.innerHTML = `
+            <label>Cambio Programado ${i}</label>
+            <div class="settings-input-wrapper">
+                <input 
+                    type="date" 
+                    id="scheduleDate${i}" 
+                    value="${savedDate}"
+                    min="${minDateTime.split('T')[0]}"  // Límite para la fecha
+                >
+                <input 
+                    type="time" 
+                    id="scheduleTime${i}" 
+                    value="${savedTime}"
+                >
+            </div>
+            <div class="settings-input-wrapper" style="margin-top: 10px;">
+                 <input 
+                    type="url" 
+                    id="scheduleUrl${i}" 
+                    placeholder="URL a cambiar" 
+                    value="${urlValue}"
+                >
+            </div>
+        `;
+        container.appendChild(item);
     }
+}
+
 
     async function saveSchedule() {
         const updates = {};
         for (let i = 1; i <= 3; i++) {
             updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
-            const dateValue = document.getElementById(`scheduleDate${i}`).value;
+            const datePart = document.getElementById(`scheduleDate${i}`).value;
+const timePart = document.getElementById(`scheduleTime${i}`).value;
+// Unimos fecha y hora. Si falta alguna, se guarda como nulo.
+const dateValue = (datePart && timePart) ? `${datePart}T${timePart}` : null;
+
             updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
         }
 
@@ -420,5 +466,6 @@ function generateQRCode(imageUrl) {
 
 </body>
 </html>
+
 
 
