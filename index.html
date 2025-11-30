@@ -163,240 +163,247 @@
         </div>
     </div>
 
-    <script>
-        // --- INICIO DEL SCRIPT ---
+<script>
+    // --- INICIO DEL SCRIPT ---
 
-        // 1. CONFIGURACIÓN E INICIALIZACIÓN
-        const SUPABASE_URL = 'https://flcxihzwyexgigavztce.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsY3hpaHp3eWV4Z2lnYXZ6dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODI0MzAsImV4cCI6MjA3OTg1ODQzMH0.7Ur3LcihnR6wIEM7QjFxNIe4ci2TmIVVt8ZcvekFSqA';
+    // 1. CONFIGURACIÓN E INICIALIZACIÓN
+    const SUPABASE_URL = 'https://flcxihzwyexgigavztce.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsY3hpaHp3eWV4Z2lnYXZ6dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODI0MzAsImV4cCI6MjA3OTg1ODQzMH0.7Ur3LcihnR6wIEM7QjFxNIe4ci2TmIVVt8ZcvekFSqA';
+    
+    let supabase;
+    let currentUserData = null; // Almacenará todos los datos del usuario logueado
+
+    // Inicializar la aplicación cuando la ventana cargue
+    window.addEventListener('load', ( ) => {
+        const { createClient } = window.supabase;
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let supabase;
-        let currentUserData = null; // Almacenará todos los datos del usuario logueado
+        // Cargar último usuario para facilitar el login
+        const lastUser = localStorage.getItem('lastUser');
+        if (lastUser) {
+            document.getElementById('email').value = lastUser;
+        }
+        
+        // Listener para el formulario de login
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    });
 
-        // Inicializar la aplicación cuando la ventana cargue
-        window.addEventListener('load', ( ) => {
-            const { createClient } = window.supabase;
-            supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            
-            // Cargar último usuario para facilitar el login
-            const lastUser = localStorage.getItem('lastUser');
-            if (lastUser) {
-                document.getElementById('email').value = lastUser;
+    // 2. NAVEGACIÓN Y UI
+    function skipVideo() {
+        document.getElementById('videoScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+    }
+
+    function showMainScreen() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainScreen').style.display = 'flex';
+    }
+
+    function showLoginScreen() {
+        document.getElementById('mainScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('password').value = ''; // Limpiar contraseña
+    }
+
+    // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
+    async function handleLogin(event) {
+        event.preventDefault();
+        const usuario = document.getElementById('email').value;
+        const clave = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.textContent = '';
+
+        try {
+            // Hacemos una consulta para encontrar la fila exacta que coincida
+            const { data, error } = await supabase
+                .from('qrs')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('clave', clave)
+                .single(); // .single() asegura que solo esperamos un resultado
+
+            if (error || !data) {
+                errorDiv.textContent = 'Usuario o contraseña incorrectos.';
+                return;
             }
+
+            // Si se encuentra, guardamos TODOS los datos de esa fila
+            currentUserData = data;
+            localStorage.setItem('lastUser', usuario);
             
-            // Listener para el formulario de login
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            // Cargamos los datos en la interfaz
+            loadUserData();
+            showMainScreen();
+
+        } catch (error) {
+            errorDiv.textContent = 'Error en la autenticación: ' + error.message;
+        }
+    }
+
+    function loadUserData() {
+        if (!currentUserData) return;
+        
+        document.getElementById('urlInput').value = currentUserData.url_activo;
+        generateQRCode(currentUserData.url_activo);
+        renderScheduleItems();
+    }
+
+    function logout() {
+        currentUserData = null;
+        showLoginScreen();
+    }
+
+    // 4. FUNCIONALIDAD DEL QR Y URL
+    function generateQRCode(url) {
+        const qrCodeDiv = document.getElementById('qrCode');
+        qrCodeDiv.innerHTML = '';
+        new QRCode(qrCodeDiv, {
+            text: url,
+            width: 180, height: 180,
+            colorDark: "#000000", colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
         });
+    }
 
-        // 2. NAVEGACIÓN Y UI
-        function skipVideo() {
-            document.getElementById('videoScreen').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
+    function enableEditUrl() {
+        const urlInput = document.getElementById('urlInput');
+        urlInput.readOnly = false;
+        urlInput.focus();
+        urlInput.select();
+    }
+
+    async function updateUrl() {
+        const urlInput = document.getElementById('urlInput');
+        const newUrl = urlInput.value.trim();
+
+        if (!newUrl || newUrl === currentUserData.url_activo) {
+            urlInput.readOnly = true;
+            return;
         }
 
-        function showMainScreen() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'flex';
-        }
+        const progressBar = document.getElementById('progressBar');
+        const updateMessage = document.getElementById('updateMessage');
+        progressBar.style.display = 'block';
+        updateMessage.style.display = 'none';
 
-        function showLoginScreen() {
-            document.getElementById('mainScreen').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('password').value = ''; // Limpiar contraseña
-        }
+        try {
+            // Actualizamos la fila usando el ID que guardamos en el login
+            const { error } = await supabase
+                .from('qrs')
+                .update({ url_activo: newUrl })
+                .eq('id', currentUserData.id);
 
-        // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
-        async function handleLogin(event) {
-            event.preventDefault();
-            const usuario = document.getElementById('email').value;
-            const clave = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = '';
+            if (error) throw error;
 
-            try {
-                const { data, error } = await supabase
-                    .from('qrs')
-                    .select('*')
-                    .eq('usuario', usuario)
-                    .eq('clave', clave)
-                    .single();
-
-                if (error || !data) {
-                    errorDiv.textContent = 'Usuario o contraseña incorrectos.';
-                    return;
-                }
-
-                currentUserData = data;
-                localStorage.setItem('lastUser', usuario);
-                loadUserData();
-                showMainScreen();
-
-            } catch (error) {
-                errorDiv.textContent = 'Error en la autenticación: ' + error.message;
-            }
-        }
-
-        function loadUserData() {
-            if (!currentUserData) return;
+            currentUserData.url_activo = newUrl; // Actualizamos nuestros datos locales
+            generateQRCode(newUrl);
+            urlInput.readOnly = true;
             
-            document.getElementById('urlInput').value = currentUserData.url_activo;
-            generateQRCode(currentUserData.url_activo);
-            renderScheduleItems();
+            progressBar.style.display = 'none';
+            updateMessage.style.display = 'block';
+            setTimeout(() => updateMessage.style.display = 'none', 3000);
+
+        } catch (error) {
+            alert('Error al actualizar la URL: ' + error.message);
+            progressBar.style.display = 'none';
+        }
+    }
+
+    // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
+    function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
+    function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
+    function openSettingsModal() { 
+        document.getElementById('settingsUser').value = currentUserData.usuario;
+        document.getElementById('settingsPassword').value = currentUserData.clave;
+        document.getElementById('settingsModal').style.display = 'block';
+    }
+    function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
+
+    function renderScheduleItems() {
+        const container = document.getElementById('scheduleItems');
+        container.innerHTML = '';
+        for (let i = 1; i <= 3; i++) {
+            const dateValue = currentUserData[`programa${i}`] ? currentUserData[`programa${i}`].split('T')[0] : '';
+            const urlValue = currentUserData[`url_programado${i}`] || '';
+            
+            const item = document.createElement('div');
+            item.className = 'settings-item';
+            item.innerHTML = `
+                <label>Cambio Programado ${i}</label>
+                <div class="settings-input-wrapper">
+                    <input type="datetime-local" id="scheduleDate${i}" value="${dateValue ? new Date(dateValue).toISOString().substring(0, 16) : ''}">
+                    <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
+                </div>
+            `;
+            container.appendChild(item);
+        }
+    }
+
+    async function saveSchedule() {
+        const updates = {};
+        for (let i = 1; i <= 3; i++) {
+            updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
+            const dateValue = document.getElementById(`scheduleDate${i}`).value;
+            updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
         }
 
-        function logout() {
-            currentUserData = null;
-            showLoginScreen();
+        try {
+            const { data, error } = await supabase
+                .from('qrs')
+                .update(updates)
+                .eq('id', currentUserData.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            currentUserData = data; // Actualizar datos locales
+            alert('Programación guardada correctamente');
+            closeScheduleModal();
+
+        } catch (error) {
+            alert('Error al guardar la programación: ' + error.message);
+        }
+    }
+
+    function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
+    function enableEditSettingsPassword() { const passInput = document.getElementById('settingsPassword'); passInput.type = 'text'; passInput.readOnly = false; passInput.focus(); }
+
+    async function updateUserSettings() {
+        const newUser = document.getElementById('settingsUser').value.trim();
+        const newPassword = document.getElementById('settingsPassword').value.trim();
+
+        if (!newUser || !newPassword) {
+            alert('El usuario y la contraseña no pueden estar vacíos.');
+            return;
         }
 
-        // 4. FUNCIONALIDAD DEL QR Y URL
-        function generateQRCode(url) {
-            const qrCodeDiv = document.getElementById('qrCode');
-            qrCodeDiv.innerHTML = '';
-            new QRCode(qrCodeDiv, {
-                text: url,
-                width: 180, height: 180,
-                colorDark: "#000000", colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+        try {
+            const { data, error } = await supabase
+                .from('qrs')
+                .update({ usuario: newUser, clave: newPassword })
+                .eq('id', currentUserData.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            currentUserData = data;
+            localStorage.setItem('lastUser', newUser);
+            alert('Usuario y contraseña actualizados correctamente.');
+            closeSettingsModal();
+
+        } catch (error) {
+            alert('Error al actualizar los datos: ' + error.message);
         }
+    }
 
-        function enableEditUrl() {
-            const urlInput = document.getElementById('urlInput');
-            urlInput.readOnly = false;
-            urlInput.focus();
-            urlInput.select();
-        }
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
+        if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
+    }
+</script>
 
-        async function updateUrl() {
-            const urlInput = document.getElementById('urlInput');
-            const newUrl = urlInput.value.trim();
-
-            if (!newUrl || newUrl === currentUserData.url_activo) {
-                urlInput.readOnly = true;
-                return;
-            }
-
-            const progressBar = document.getElementById('progressBar');
-            const updateMessage = document.getElementById('updateMessage');
-            progressBar.style.display = 'block';
-            updateMessage.style.display = 'none';
-
-            try {
-                const { error } = await supabase
-                    .from('qrs')
-                    .update({ url_activo: newUrl })
-                    .eq('id', currentUserData.id);
-
-                if (error) throw error;
-
-                currentUserData.url_activo = newUrl;
-                generateQRCode(newUrl);
-                urlInput.readOnly = true;
-                
-                progressBar.style.display = 'none';
-                updateMessage.style.display = 'block';
-                setTimeout(() => updateMessage.style.display = 'none', 3000);
-
-            } catch (error) {
-                alert('Error al actualizar la URL: ' + error.message);
-                progressBar.style.display = 'none';
-            }
-        }
-
-        // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
-        function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
-        function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
-        function openSettingsModal() { 
-            document.getElementById('settingsUser').value = currentUserData.usuario;
-            document.getElementById('settingsPassword').value = currentUserData.clave;
-            document.getElementById('settingsModal').style.display = 'block';
-        }
-        function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
-
-        function renderScheduleItems() {
-            const container = document.getElementById('scheduleItems');
-            container.innerHTML = '';
-            for (let i = 1; i <= 3; i++) {
-                const dateValue = currentUserData[`programa${i}`] ? currentUserData[`programa${i}`].split('T')[0] : '';
-                const urlValue = currentUserData[`url_programado${i}`] || '';
-                
-                const item = document.createElement('div');
-                item.className = 'settings-item';
-                item.innerHTML = `
-                    <label>Cambio Programado ${i}</label>
-                    <div class="settings-input-wrapper">
-                        <input type="datetime-local" id="scheduleDate${i}" value="${dateValue ? new Date(dateValue).toISOString().substring(0, 16) : ''}">
-                        <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
-                    </div>
-                `;
-                container.appendChild(item);
-            }
-        }
-
-        async function saveSchedule() {
-            const updates = {};
-            for (let i = 1; i <= 3; i++) {
-                updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
-                const dateValue = document.getElementById(`scheduleDate${i}`).value;
-                updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('qrs')
-                    .update(updates)
-                    .eq('id', currentUserData.id)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                
-                currentUserData = data; // Actualizar datos locales
-                alert('Programación guardada correctamente');
-                closeScheduleModal();
-
-            } catch (error) {
-                alert('Error al guardar la programación: ' + error.message);
-            }
-        }
-
-        function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
-        function enableEditSettingsPassword() { const passInput = document.getElementById('settingsPassword'); passInput.type = 'text'; passInput.readOnly = false; passInput.focus(); }
-
-        async function updateUserSettings() {
-            const newUser = document.getElementById('settingsUser').value.trim();
-            const newPassword = document.getElementById('settingsPassword').value.trim();
-
-            if (!newUser || !newPassword) {
-                alert('El usuario y la contraseña no pueden estar vacíos.');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('qrs')
-                    .update({ usuario: newUser, clave: newPassword })
-                    .eq('id', currentUserData.id)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                currentUserData = data;
-                localStorage.setItem('lastUser', newUser);
-                alert('Usuario y contraseña actualizados correctamente.');
-                closeSettingsModal();
-
-            } catch (error) {
-                alert('Error al actualizar los datos: ' + error.message);
-            }
-        }
-
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
-            if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
-        }
-    </script>
 </body>
 </html>
+
