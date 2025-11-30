@@ -7,404 +7,85 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* COLORES Y FUENTES DEL NUEVO DISEÑO (pasted_content_4.txt) */
         :root {
             --color-negro: #0a0a0a;
             --color-dorado: #d4af37;
             --color-blanco: #ffffff;
-            --color-gris-claro: #f5f5f5; /* Usado como color de superficie */
-            --color-gris-oscuro: #2a2a2a; /* Usado para bordes y acentos oscuros */
-            --color-rojo: #e74c3c; /* Para mensajes de error */
+            --color-gris-claro: #f5f5f5;
+            --color-gris-oscuro: #2a2a2a;
+            --color-rojo: #e74c3c;
             --color-texto: #333333;
             --font-family: 'Georgia', serif;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            font-family: var(--font-family);
-        }
-
-        .app-wrapper {
-            width: 100%;
-            min-height: 100vh;
-            background: var(--color-blanco);
-            color: var(--color-texto);
-            overflow-x: hidden;
-        }
-
-        /* ESTILOS BASE DE CONTENEDORES (Adaptados de hero-section y app-wrapper) */
-        .video-container, .login-container, .main-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%);
-            padding: 20px;
-            position: relative;
-        }
-        
-        .login-container, .main-container {
-            display: none; /* Controlado por JS */
-        }
-
-        /* VIDEO INTRO */
-        .video-wrapper {
-            position: relative;
-            width: 90%;
-            max-width: 800px;
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            border: 3px solid var(--color-dorado);
-        }
-
-        .video-wrapper video {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .skip-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            /* Estilo adaptado de cta-button */
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--color-blanco);
-            background: var(--color-negro);
-            border: 2px solid var(--color-dorado);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-            z-index: 10;
-        }
-
-        .skip-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
-            background: var(--color-gris-oscuro);
-        }
-
-        /* CAJAS DE CONTENIDO (LOGIN, MAIN, MODAL) - Adaptado de feature-card */
-        .login-box, .main-content, .modal-content {
-            background: var(--color-gris-claro);
-            border: 2px solid var(--color-dorado);
-            border-radius: 8px;
-            padding: 40px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            max-width: 400px; /* Para login */
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
-        }
-        
-        .main-content {
-            max-width: 600px; /* Para pantalla principal */
-        }
-
-        .login-box h1, .main-header h1, .modal-header h2 {
-            /* Adaptado de main-title */
-            font-size: 28px;
-            font-weight: 300;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, var(--color-negro) 0%, var(--color-dorado) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-align: center;
-        }
-        
-        .main-header p, .modal-header p {
-            color: var(--color-texto);
-            font-size: 14px;
-            text-align: center;
-        }
-
-        /* FORMULARIOS E INPUTS */
-        .form-group, .url-section, .settings-item {
-            margin-bottom: 20px;
-        }
-
-        .form-group label, .url-section label, .settings-item label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--color-negro);
-            font-weight: 600;
-        }
-
-        .form-group input, .url-input-wrapper input, .settings-input-wrapper input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--color-gris-oscuro);
-            border-radius: 4px;
-            background-color: var(--color-blanco);
-            color: var(--color-negro);
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus, .url-input-wrapper input:focus, .settings-input-wrapper input:focus {
-            outline: none;
-            border-color: var(--color-dorado);
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-        
-        .url-input-wrapper {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .url-input-wrapper input {
-            flex: 1;
-        }
-
-        /* BOTONES - Adaptado de cta-button */
-        .login-button, .btn, .edit-button, .btn-guardar, .btn-cancelar {
-            padding: 14px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .login-button {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn-actualizar, .btn-programar, .login-button, .btn-guardar {
-            background-color: var(--color-negro);
-            color: var(--color-blanco);
-            border: 2px solid var(--color-dorado);
-        }
-
-        .btn-actualizar:hover, .btn-programar:hover, .login-button:hover, .btn-guardar:hover {
-            background-color: var(--color-gris-oscuro);
-            color: var(--color-dorado);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-        }
-        
-        .btn-cerrar {
-            background-color: var(--color-rojo);
-            color: var(--color-blanco);
-        }
-
-        .btn-cerrar:hover {
-            background-color: #ff6666;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
-        }
-        
-        .edit-button {
-            padding: 10px 15px;
-            background-color: var(--color-dorado);
-            color: var(--color-negro);
-            border: none;
-            text-transform: none;
-            letter-spacing: normal;
-        }
-        
-        .edit-button:hover {
-            background-color: #f4d03f;
-            transform: scale(1.05);
-        }
-        
-        .btn-cancelar {
-            background-color: var(--color-gris-claro);
-            color: var(--color-negro);
-            border: 1px solid var(--color-gris-oscuro);
-        }
-        
-        .btn-cancelar:hover {
-            background-color: var(--color-blanco);
-            transform: translateY(-2px);
-        }
-
-        /* QR SECTION */
-        .qr-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: var(--color-blanco);
-            border-radius: 8px;
-            border: 2px solid var(--color-dorado);
-        }
-
-        #qrCode {
-            display: inline-block;
-            padding: 10px;
-            background-color: var(--color-blanco);
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            margin: 5% auto;
-            max-width: 500px;
-        }
-        
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .modal-buttons button {
-            flex: 1;
-        }
-        
-        /* PROGRESS BAR */
-        .progress-bar {
-            display: none;
-            width: 100%;
-            height: 4px;
-            background-color: var(--color-gris-oscuro);
-            border-radius: 2px;
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--color-dorado), var(--color-negro));
-            width: 0%;
-            animation: progress 2s ease-in-out forwards;
-        }
-
-        @keyframes progress {
-            0% {
-                width: 0%;
-            }
-            50% {
-                width: 100%;
-            }
-            100% {
-                width: 100%;
-            }
-        }
-
-        .update-message {
-            display: none;
-            text-align: center;
-            color: var(--color-dorado);
-            font-weight: bold;
-            margin-top: 10px;
-            animation: fadeInOut 3s ease-in-out;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% {
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-        
-        .error-message {
-            color: var(--color-rojo);
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        .success-message {
-            color: var(--color-dorado);
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .login-box, .main-content, .modal-content {
-                padding: 25px;
-            }
-            .url-input-wrapper {
-                flex-direction: column;
-            }
-            .url-input-wrapper input {
-                margin-bottom: 10px;
-            }
-            .modal-buttons {
-                flex-direction: column;
-            }
-        }
-
-
-
-/* --- NUEVO ESTILO PARA ORDENAR BOTONES --- */
-.button-group {
-    display: flex;          /* Activa Flexbox */
-    flex-direction: column; /* Apila los elementos verticalmente */
-    gap: 15px;              /* Añade un espacio de 15px entre cada botón */
-    margin-top: 30px;       /* Añade un espacio superior para separarlo de la barra de progreso */
-}
-/* --- FIN DEL NUEVO ESTILO --- */
-
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: var(--font-family ); }
+        .app-wrapper { width: 100%; min-height: 100vh; background: var(--color-blanco); color: var(--color-texto); overflow-x: hidden; }
+        .video-container, .login-container, .main-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%); padding: 20px; position: relative; }
+        .login-container, .main-container { display: none; }
+        .video-wrapper { position: relative; width: 90%; max-width: 800px; background-color: var(--color-blanco); border-radius: 8px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); border: 3px solid var(--color-dorado); }
+        .video-wrapper video { width: 100%; height: auto; display: block; }
+        .skip-button { position: absolute; top: 20px; right: 20px; padding: 12px 24px; font-size: 16px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: var(--color-blanco); background: var(--color-negro); border: 2px solid var(--color-dorado); border-radius: 4px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); z-index: 10; }
+        .skip-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5); background: var(--color-gris-oscuro); }
+        .login-box, .main-content, .modal-content { background: var(--color-gris-claro); border: 2px solid var(--color-dorado); border-radius: 8px; padding: 40px; transition: all 0.3s ease; position: relative; overflow: hidden; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1); }
+        .main-content { max-width: 600px; }
+        .login-box h1, .main-header h1, .modal-header h2 { font-size: 28px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; background: linear-gradient(135deg, var(--color-negro) 0%, var(--color-dorado) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; }
+        .main-header p, .modal-header p { color: var(--color-texto); font-size: 14px; text-align: center; }
+        .form-group, .url-section, .settings-item { margin-bottom: 20px; }
+        .form-group label, .url-section label, .settings-item label { display: block; margin-bottom: 8px; color: var(--color-negro); font-weight: 600; }
+        .form-group input, .url-input-wrapper input, .settings-input-wrapper input { width: 100%; padding: 12px; border: 1px solid var(--color-gris-oscuro); border-radius: 4px; background-color: var(--color-blanco); color: var(--color-negro); font-size: 16px; transition: border-color 0.3s ease; }
+        .form-group input:focus, .url-input-wrapper input:focus, .settings-input-wrapper input:focus { outline: none; border-color: var(--color-dorado); box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .url-input-wrapper { display: flex; gap: 10px; }
+        .url-input-wrapper input { flex: 1; }
+        .login-button, .btn, .edit-button, .btn-guardar, .btn-cancelar { padding: 14px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .login-button { width: 100%; margin-top: 10px; }
+        .btn-actualizar, .btn-programar, .login-button, .btn-guardar { background-color: var(--color-negro); color: var(--color-blanco); border: 2px solid var(--color-dorado); }
+        .btn-actualizar:hover, .btn-programar:hover, .login-button:hover, .btn-guardar:hover { background-color: var(--color-gris-oscuro); color: var(--color-dorado); transform: translateY(-2px); box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); }
+        .btn-cerrar { background-color: var(--color-rojo); color: var(--color-blanco); }
+        .btn-cerrar:hover { background-color: #ff6666; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4); }
+        .edit-button { padding: 10px 15px; background-color: var(--color-dorado); color: var(--color-negro); border: none; text-transform: none; letter-spacing: normal; }
+        .edit-button:hover { background-color: #f4d03f; transform: scale(1.05); }
+        .btn-cancelar { background-color: var(--color-gris-claro); color: var(--color-negro); border: 1px solid var(--color-gris-oscuro); }
+        .btn-cancelar:hover { background-color: var(--color-blanco); transform: translateY(-2px); }
+        .qr-section { text-align: center; margin-bottom: 30px; padding: 20px; background-color: var(--color-blanco); border-radius: 8px; border: 2px solid var(--color-dorado); }
+        #qrCode { display: inline-block; padding: 10px; background-color: var(--color-blanco); border-radius: 4px; margin-bottom: 15px; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.7); padding-top: 60px; }
+        .modal-content { margin: 5% auto; max-width: 500px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-buttons button { flex: 1; }
+        .progress-bar { display: none; width: 100%; height: 4px; background-color: var(--color-gris-oscuro); border-radius: 2px; margin-bottom: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--color-dorado), var(--color-negro)); width: 0%; animation: progress 2s ease-in-out forwards; }
+        @keyframes progress { 0% { width: 0%; } 50% { width: 100%; } 100% { width: 100%; } }
+        .update-message { display: none; text-align: center; color: var(--color-dorado); font-weight: bold; margin-top: 10px; animation: fadeInOut 3s ease-in-out; }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        .error-message { color: var(--color-rojo); font-size: 14px; margin-top: 10px; text-align: center; }
+        .success-message { color: var(--color-dorado); font-size: 14px; margin-top: 10px; text-align: center; }
+        .button-group { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        @media (max-width: 768px) { .login-box, .main-content, .modal-content { padding: 25px; } .url-input-wrapper { flex-direction: column; } .url-input-wrapper input { margin-bottom: 10px; } .modal-buttons { flex-direction: column; } }
     </style>
 </head>
 <body>
     <div class="app-wrapper">
-        <!-- PANTALLA DE VIDEO DE PRESENTACIÓN -->
         <div id="videoScreen" class="video-container">
             <div class="video-wrapper">
                 <video id="presentationVideo" controls autoplay muted>
                     <source src="https://github.com/cartasinteractivas-jpg/qrmanager/raw/main/qrdinamicopresentacion.mp4" type="video/mp4">
                     Tu navegador no soporta el elemento de video.
                 </video>
-                <button class="skip-button" onclick="skipVideo()">Saltar Video</button>
+                <button class="skip-button" onclick="skipVideo( )">Saltar Video</button>
             </div>
         </div>
 
-        <!-- PANTALLA DE LOGIN -->
         <div id="loginScreen" class="login-container">
             <div class="login-box">
                 <h1>Iniciar Sesión</h1>
-                <form id="loginForm" onsubmit="handleLogin(event)">
+                <form id="loginForm">
                     <div class="form-group">
-                        <label for="email">Usuario o Email</label>
-                        <input type="text" id="email" name="email" required>
+                        <label for="email">Usuario</label>
+                        <input type="text" id="email" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" required>
                     </div>
                     <button type="submit" class="login-button">Entrar</button>
                     <div id="loginError" class="error-message"></div>
@@ -412,31 +93,24 @@
             </div>
         </div>
 
-        <!-- PANTALLA PRINCIPAL -->
         <div id="mainScreen" class="main-container">
             <div class="main-content">
                 <div class="main-header">
                     <h1>Tu QR Dinámico</h1>
                     <p>Gestiona tu código QR y cambios de dirección</p>
                 </div>
-
                 <div class="qr-section">
                     <div id="qrCode"></div>
                 </div>
-
                 <div class="url-section">
                     <label>Dirección Actual</label>
                     <div class="url-input-wrapper">
                         <input type="text" id="urlInput" placeholder="https://ejemplo.com" readonly>
-                        <button class="edit-button" onclick="enableEditUrl()">Editar</button>
+                        <button class="edit-button" onclick="enableEditUrl( )">Editar</button>
                     </div>
                 </div>
-
-                <div id="progressBar" class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
+                <div id="progressBar" class="progress-bar"><div class="progress-fill"></div></div>
                 <div id="updateMessage" class="update-message">✓ Dirección actualizada correctamente</div>
-
                 <div class="button-group">
                     <button class="btn btn-actualizar" onclick="updateUrl()">Actualizar</button>
                     <button class="btn btn-programar" onclick="openScheduleModal()">Programar</button>
@@ -446,16 +120,13 @@
             </div>
         </div>
 
-        <!-- MODAL DE PROGRAMACIÓN -->
         <div id="scheduleModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Programar Cambio de Dirección</h2>
                     <p>Puede cambiar la dirección según la fecha programada (3 opciones de cambio)</p>
                 </div>
-
                 <div id="scheduleItems"></div>
-
                 <div class="modal-buttons">
                     <button class="btn-guardar" onclick="saveSchedule()">Guardar</button>
                     <button class="btn-cancelar" onclick="closeScheduleModal()">Cancelar</button>
@@ -463,13 +134,11 @@
             </div>
         </div>
 
-        <!-- MODAL DE AJUSTES -->
         <div id="settingsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Cambia de usuario y contrasena</h2>
+                    <h2>Cambia de usuario y contraseña</h2>
                 </div>
-
                 <div class="settings-form">
                     <div class="settings-item">
                         <label>Usuario</label>
@@ -478,16 +147,14 @@
                             <button class="edit-button" onclick="enableEditSettingsUser()">Editar</button>
                         </div>
                     </div>
-
                     <div class="settings-item">
-                        <label>Contrasena</label>
+                        <label>Contraseña</label>
                         <div class="settings-input-wrapper">
-                            <input type="password" id="settingsPassword" placeholder="Contrasena" readonly>
+                            <input type="password" id="settingsPassword" placeholder="Contraseña" readonly>
                             <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-buttons">
                     <button class="btn-guardar" onclick="updateUserSettings()">Actualizar</button>
                     <button class="btn-cancelar" onclick="closeSettingsModal()">Cancelar</button>
@@ -497,268 +164,239 @@
     </div>
 
     <script>
-        // Configuración de Supabase (Mantenida de pasted_content_3.txt)
-        const SUPABASE_URL = 'https://your-supabase-url.supabase.co';
-        const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
+        // --- INICIO DEL SCRIPT ---
+
+        // 1. CONFIGURACIÓN E INICIALIZACIÓN
+        const SUPABASE_URL = 'https://flcxihzwyexgigavztce.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsY3hpaHp3eWV4Z2lnYXZ6dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODI0MzAsImV4cCI6MjA3OTg1ODQzMH0.7Ur3LcihnR6wIEM7QjFxNIe4ci2TmIVVt8ZcvekFSqA';
         
         let supabase;
-        let currentUser = null;
-        let currentQRData = {
-            url: 'https://ejemplo.com',
-            schedules: [
-                { date: '', url: '' },
-                { date: '', url: '' },
-                { date: '', url: '' }
-            ]
-        };
+        let currentUserData = null; // Almacenará todos los datos del usuario logueado
 
-        // Inicializar Supabase
-        function initSupabase() {
+        // Inicializar la aplicación cuando la ventana cargue
+        window.addEventListener('load', ( ) => {
             const { createClient } = window.supabase;
             supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
+            
+            // Cargar último usuario para facilitar el login
+            const lastUser = localStorage.getItem('lastUser');
+            if (lastUser) {
+                document.getElementById('email').value = lastUser;
+            }
+            
+            // Listener para el formulario de login
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        });
 
-        // Saltar video
+        // 2. NAVEGACIÓN Y UI
         function skipVideo() {
             document.getElementById('videoScreen').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
         }
 
-        // Manejar login
+        function showMainScreen() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'flex';
+        }
+
+        function showLoginScreen() {
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('password').value = ''; // Limpiar contraseña
+        }
+
+        // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
         async function handleLogin(event) {
             event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const usuario = document.getElementById('email').value;
+            const clave = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = '';
 
             try {
-                errorDiv.textContent = '';
-                
-                // Credenciales de prueba (Mantenidas de pasted_content_3.txt)
-                const testUser = 'matrix';
-                const testPassword = 'mutter';
-                
-                if (email === testUser && password === testPassword) {
-                    currentUser = { email: email };
-                    
-                    // Guardar credenciales en localStorage para futuro cotejo con Supabase
-                    localStorage.setItem('userEmail', email);
-                    localStorage.setItem('userPassword', password);
-                    localStorage.setItem('lastUser', email);
-                    
-                    loadUserData();
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainScreen').style.display = 'flex'; // Cambiado a 'flex' para centrar
-                    generateQRCode();
-                } else if (email && password) {
-                    errorDiv.textContent = 'Usuario o contraseña incorrectos. Usa: matrix / mutter';
-                } else {
-                    errorDiv.textContent = 'Por favor completa todos los campos';
+                const { data, error } = await supabase
+                    .from('qrs')
+                    .select('*')
+                    .eq('usuario', usuario)
+                    .eq('clave', clave)
+                    .single();
+
+                if (error || !data) {
+                    errorDiv.textContent = 'Usuario o contraseña incorrectos.';
+                    return;
                 }
+
+                currentUserData = data;
+                localStorage.setItem('lastUser', usuario);
+                loadUserData();
+                showMainScreen();
+
             } catch (error) {
                 errorDiv.textContent = 'Error en la autenticación: ' + error.message;
-                console.error(error);
             }
         }
 
-        // Cargar datos del usuario (Mantenida de pasted_content_3.txt)
-        async function loadUserData() {
-            // Lógica para cargar datos de Supabase (simulada con datos por defecto)
-            document.getElementById('urlInput').value = currentQRData.url;
-            document.getElementById('settingsUser').value = currentUser.email;
-            document.getElementById('settingsPassword').value = localStorage.getItem('userPassword') || '';
+        function loadUserData() {
+            if (!currentUserData) return;
             
-            // Lógica para cargar schedules (simulada)
+            document.getElementById('urlInput').value = currentUserData.url_activo;
+            generateQRCode(currentUserData.url_activo);
             renderScheduleItems();
         }
 
-        // Generar QR (Mantenida de pasted_content_3.txt)
-        function generateQRCode() {
+        function logout() {
+            currentUserData = null;
+            showLoginScreen();
+        }
+
+        // 4. FUNCIONALIDAD DEL QR Y URL
+        function generateQRCode(url) {
             const qrCodeDiv = document.getElementById('qrCode');
             qrCodeDiv.innerHTML = '';
             new QRCode(qrCodeDiv, {
-                text: currentQRData.url,
-                width: 180,
-                height: 180,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                text: url,
+                width: 180, height: 180,
+                colorDark: "#000000", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
             });
         }
 
-        // Habilitar edición de URL (Mantenida de pasted_content_3.txt)
         function enableEditUrl() {
             const urlInput = document.getElementById('urlInput');
-            urlInput.removeAttribute('readonly');
+            urlInput.readOnly = false;
             urlInput.focus();
             urlInput.select();
         }
 
-        // Actualizar URL (Mantenida de pasted_content_3.txt)
         async function updateUrl() {
             const urlInput = document.getElementById('urlInput');
             const newUrl = urlInput.value.trim();
 
-            if (!newUrl || newUrl === currentQRData.url) {
-                urlInput.setAttribute('readonly', true);
+            if (!newUrl || newUrl === currentUserData.url_activo) {
+                urlInput.readOnly = true;
                 return;
             }
 
-            // Simulación de progreso
             const progressBar = document.getElementById('progressBar');
             const updateMessage = document.getElementById('updateMessage');
             progressBar.style.display = 'block';
             updateMessage.style.display = 'none';
 
-            // Aquí iría la lógica de actualización en Supabase
-            console.log('Actualizando URL a:', newUrl);
-            
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simular espera
+            try {
+                const { error } = await supabase
+                    .from('qrs')
+                    .update({ url_activo: newUrl })
+                    .eq('id', currentUserData.id);
 
-            currentQRData.url = newUrl;
-            generateQRCode();
-            urlInput.setAttribute('readonly', true);
-            
-            progressBar.style.display = 'none';
-            updateMessage.style.display = 'block';
-            setTimeout(() => updateMessage.style.display = 'none', 3000);
+                if (error) throw error;
+
+                currentUserData.url_activo = newUrl;
+                generateQRCode(newUrl);
+                urlInput.readOnly = true;
+                
+                progressBar.style.display = 'none';
+                updateMessage.style.display = 'block';
+                setTimeout(() => updateMessage.style.display = 'none', 3000);
+
+            } catch (error) {
+                alert('Error al actualizar la URL: ' + error.message);
+                progressBar.style.display = 'none';
+            }
         }
 
-        // Cerrar sesión (Mantenida de pasted_content_3.txt)
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userPassword');
-            document.getElementById('mainScreen').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('password').value = '';
+        // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
+        function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
+        function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
+        function openSettingsModal() { 
+            document.getElementById('settingsUser').value = currentUserData.usuario;
+            document.getElementById('settingsPassword').value = currentUserData.clave;
+            document.getElementById('settingsModal').style.display = 'block';
         }
+        function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
 
-        // Abrir modal de programación (Mantenida de pasted_content_3.txt)
-        function openScheduleModal() {
-            document.getElementById('scheduleModal').style.display = 'block';
-        }
-
-        // Cerrar modal de programación (Mantenida de pasted_content_3.txt)
-        function closeScheduleModal() {
-            document.getElementById('scheduleModal').style.display = 'none';
-        }
-
-        // Renderizar items de programación (Mantenida de pasted_content_3.txt)
         function renderScheduleItems() {
             const container = document.getElementById('scheduleItems');
             container.innerHTML = '';
-            
-            currentQRData.schedules.forEach((schedule, index) => {
+            for (let i = 1; i <= 3; i++) {
+                const dateValue = currentUserData[`programa${i}`] ? currentUserData[`programa${i}`].split('T')[0] : '';
+                const urlValue = currentUserData[`url_programado${i}`] || '';
+                
                 const item = document.createElement('div');
                 item.className = 'settings-item';
                 item.innerHTML = `
-                    <label>Cambio Programado ${index + 1}</label>
+                    <label>Cambio Programado ${i}</label>
                     <div class="settings-input-wrapper">
-                        <input type="date" id="scheduleDate${index}" value="${schedule.date}" onchange="updateSchedule(${index}, 'date', this.value)">
-                        <input type="url" id="scheduleUrl${index}" placeholder="URL a cambiar" value="${schedule.url}" onchange="updateSchedule(${index}, 'url', this.value)">
+                        <input type="datetime-local" id="scheduleDate${i}" value="${dateValue ? new Date(dateValue).toISOString().substring(0, 16) : ''}">
+                        <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
                     </div>
                 `;
                 container.appendChild(item);
-            });
+            }
         }
 
-        // Actualizar programación (Mantenida de pasted_content_3.txt)
-        function updateSchedule(index, field, value) {
-            currentQRData.schedules[index][field] = value;
+        async function saveSchedule() {
+            const updates = {};
+            for (let i = 1; i <= 3; i++) {
+                updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
+                const dateValue = document.getElementById(`scheduleDate${i}`).value;
+                updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('qrs')
+                    .update(updates)
+                    .eq('id', currentUserData.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                
+                currentUserData = data; // Actualizar datos locales
+                alert('Programación guardada correctamente');
+                closeScheduleModal();
+
+            } catch (error) {
+                alert('Error al guardar la programación: ' + error.message);
+            }
         }
 
-        // Guardar programación (Mantenida de pasted_content_3.txt)
-        function saveSchedule() {
-            // Aquí iría la lógica de guardado en Supabase
-            console.log('Programación guardada:', currentQRData.schedules);
-            alert('Programación guardada correctamente');
-            closeScheduleModal();
-        }
+        function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
+        function enableEditSettingsPassword() { const passInput = document.getElementById('settingsPassword'); passInput.type = 'text'; passInput.readOnly = false; passInput.focus(); }
 
-        // Abrir modal de ajustes (Mantenida de pasted_content_3.txt)
-        function openSettingsModal() {
-            document.getElementById('settingsUser').value = currentUser.email;
-            document.getElementById('settingsPassword').value = localStorage.getItem('userPassword') || '';
-            document.getElementById('settingsModal').style.display = 'block';
-        }
-
-        // Cerrar modal de ajustes (Mantenida de pasted_content_3.txt)
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').style.display = 'none';
-        }
-
-        // Habilitar edición de usuario en ajustes (Mantenida de pasted_content_3.txt)
-        function enableEditSettingsUser() {
-            const userInput = document.getElementById('settingsUser');
-            userInput.removeAttribute('readonly');
-            userInput.focus();
-            userInput.select();
-        }
-
-        // Habilitar edición de contraseña en ajustes (Mantenida de pasted_content_3.txt)
-        function enableEditSettingsPassword() {
-            const passwordInput = document.getElementById('settingsPassword');
-            passwordInput.type = 'text'; // Cambiar a texto para edición
-            passwordInput.removeAttribute('readonly');
-            passwordInput.focus();
-            passwordInput.select();
-        }
-
-        // Actualizar usuario y contraseña (Mantenida de pasted_content_3.txt)
-        function updateUserSettings() {
+        async function updateUserSettings() {
             const newUser = document.getElementById('settingsUser').value.trim();
             const newPassword = document.getElementById('settingsPassword').value.trim();
 
             if (!newUser || !newPassword) {
-                alert('Por favor completa tanto el usuario como la contrasena');
+                alert('El usuario y la contraseña no pueden estar vacíos.');
                 return;
             }
 
-            // Guardar nuevas credenciales en localStorage
-            localStorage.setItem('userEmail', newUser);
-            localStorage.setItem('userPassword', newPassword);
-            localStorage.setItem('lastUser', newUser);
-            
-            // Actualizar el usuario actual
-            currentUser.email = newUser;
+            try {
+                const { data, error } = await supabase
+                    .from('qrs')
+                    .update({ usuario: newUser, clave: newPassword })
+                    .eq('id', currentUserData.id)
+                    .select()
+                    .single();
 
-            // Mostrar mensaje de exito
-            alert('Usuario y contrasena actualizados correctamente');
-            
-            // Cerrar modal
-            closeSettingsModal();
-            
-            // Aqui iria la actualizacion en Supabase
-            console.log('Nuevas credenciales guardadas:', { newUser, newPassword });
-        }
+                if (error) throw error;
 
-        // Cerrar modal al hacer clic fuera (Mantenida de pasted_content_3.txt)
-        window.onclick = function(event) {
-            const modal = document.getElementById('scheduleModal');
-            const settingsModal = document.getElementById('settingsModal');
-            if (event.target === modal) {
-                closeScheduleModal();
-            }
-            if (event.target === settingsModal) {
+                currentUserData = data;
+                localStorage.setItem('lastUser', newUser);
+                alert('Usuario y contraseña actualizados correctamente.');
                 closeSettingsModal();
+
+            } catch (error) {
+                alert('Error al actualizar los datos: ' + error.message);
             }
         }
 
-        // Cargar usuario guardado (Mantenida de pasted_content_3.txt)
-        function loadSavedUser() {
-            const lastUser = localStorage.getItem('lastUser');
-            if (lastUser) {
-                document.getElementById('email').value = lastUser;
-            }
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
+            if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
         }
-        
-        // Inicializar
-        window.addEventListener('load', () => {
-            initSupabase();
-            loadSavedUser();
-        });
     </script>
 </body>
 </html>
-
