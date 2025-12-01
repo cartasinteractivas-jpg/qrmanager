@@ -85,7 +85,7 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>
-                        <input type="password" id="password" required>
+                        <input type="password" id="text" required>
                     </div>
                     <button type="submit" class="login-button">Entrar</button>
                     <div id="loginError" class="error-message"></div>
@@ -150,7 +150,7 @@
                     <div class="settings-item">
                         <label>Contraseña</label>
                         <div class="settings-input-wrapper">
-                            <input type="password" id="settingsPassword" placeholder="Contraseña" readonly>
+                            <input type="text" id="settingsPassword" placeholder="Contraseña" readonly>
                             <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
                         </div>
                     </div>
@@ -335,6 +335,8 @@ generateQRCode(currentUserData.qr_imagen);
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
 
+
+    
 // Reemplaza la función renderScheduleItems con esta versión mejorada
 function renderScheduleItems() {
     const container = document.getElementById('scheduleItems');
@@ -358,7 +360,7 @@ function renderScheduleItems() {
             
             savedPeriod = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // La hora 0 debe ser 12
+            hours = hours ? hours : 12;
             
             savedHour = String(hours).padStart(2, '0');
             savedMinute = String(minutes).padStart(2, '0');
@@ -369,16 +371,13 @@ function renderScheduleItems() {
         const item = document.createElement('div');
         item.className = 'settings-item';
         
-        // Creamos un input para fecha y tres para la hora (hora, minuto, am/pm)
         item.innerHTML = `
             <label>Cambio Programado ${i}</label>
             <div class="settings-input-wrapper">
                 <input type="date" id="scheduleDate${i}" value="${savedDate}" min="${minDate}">
-                
                 <input type="number" id="scheduleHour${i}" value="${savedHour}" min="1" max="12" style="width: 60px;">
                 <span>:</span>
                 <input type="number" id="scheduleMinute${i}" value="${savedMinute}" min="0" max="59" step="1" style="width: 60px;">
-                
                 <select id="schedulePeriod${i}" style="padding: 12px;">
                     <option value="AM" ${savedPeriod === 'AM' ? 'selected' : ''}>AM</option>
                     <option value="PM" ${savedPeriod === 'PM' ? 'selected' : ''}>PM</option>
@@ -392,7 +391,7 @@ function renderScheduleItems() {
     }
 }
 
-// Y también reemplaza la función saveSchedule para que lea los nuevos campos
+// Función para guardar la programación (versión correcta y única)
 async function saveSchedule() {
     const updates = {};
     for (let i = 1; i <= 3; i++) {
@@ -403,15 +402,13 @@ async function saveSchedule() {
         const minutePart = document.getElementById(`scheduleMinute${i}`).value;
         const periodPart = document.getElementById(`schedulePeriod${i}`).value;
 
-        // Convertir hora de 12h a 24h
         if (periodPart === 'PM' && hourPart < 12) {
             hourPart += 12;
         }
-        if (periodPart === 'AM' && hourPart === 12) { // Medianoche
+        if (periodPart === 'AM' && hourPart === 12) {
             hourPart = 0;
         }
 
-        // Unimos todo para crear la fecha ISO
         const dateValue = (datePart && minutePart) ? `${datePart}T${String(hourPart).padStart(2, '0')}:${minutePart}:00` : null;
         
         updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
@@ -436,69 +433,44 @@ async function saveSchedule() {
     }
 }
 
+function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
 
-    async function saveSchedule() {
-        const updates = {};
-        for (let i = 1; i <= 3; i++) {
-            updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
-            const datePart = document.getElementById(`scheduleDate${i}`).value;
-const timePart = document.getElementById(`scheduleTime${i}`).value;
-// Unimos fecha y hora. Si falta alguna, se guarda como nulo.
-const dateValue = (datePart && timePart) ? `${datePart}T${timePart}` : null;
+function enableEditSettingsPassword() { 
+    const passInput = document.getElementById('settingsPassword'); 
+    passInput.type = 'text'; 
+    passInput.readOnly = false; 
+    passInput.focus(); 
+}
 
-            updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
-        }
+async function updateUserSettings() {
+    const newUser = document.getElementById('settingsUser').value.trim();
+    const newPassword = document.getElementById('settingsPassword').value.trim();
 
-        try {
-            const { data, error } = await supabase
-                .from('qrs')
-                .update(updates)
-                .eq('id', currentUserData.id)
-                .select()
-                .single();
-
-            if (error) throw error;
-            
-            currentUserData = data; // Actualizar datos locales
-            alert('Programación guardada correctamente');
-            closeScheduleModal();
-
-        } catch (error) {
-            alert('Error al guardar la programación: ' + error.message);
-        }
+    if (!newUser || !newPassword) {
+        alert('El usuario y la contraseña no pueden estar vacíos.');
+        return;
     }
 
-    function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
-    function enableEditSettingsPassword() { const passInput = document.getElementById('settingsPassword'); passInput.type = 'text'; passInput.readOnly = false; passInput.focus(); }
+    try {
+        const { data, error } = await supabase
+            .from('qrs')
+            .update({ usuario: newUser, clave: newPassword })
+            .eq('id', currentUserData.id)
+            .select()
+            .single();
 
-    async function updateUserSettings() {
-        const newUser = document.getElementById('settingsUser').value.trim();
-        const newPassword = document.getElementById('settingsPassword').value.trim();
+        if (error) throw error;
 
-        if (!newUser || !newPassword) {
-            alert('El usuario y la contraseña no pueden estar vacíos.');
-            return;
-        }
+        currentUserData = data;
+        localStorage.setItem('lastUser', newUser);
+        alert('Usuario y contraseña actualizados correctamente.');
+        closeSettingsModal();
 
-        try {
-            const { data, error } = await supabase
-                .from('qrs')
-                .update({ usuario: newUser, clave: newPassword })
-                .eq('id', currentUserData.id)
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            currentUserData = data;
-            localStorage.setItem('lastUser', newUser);
-            alert('Usuario y contraseña actualizados correctamente.');
-            closeSettingsModal();
-
-        } catch (error) {
-            alert('Error al actualizar los datos: ' + error.message);
-        }
+    } catch (error) {
+        alert('Error al actualizar los datos: ' + error.message);
     }
+}
+
 
     window.onclick = function(event) {
         if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
@@ -508,6 +480,7 @@ const dateValue = (datePart && timePart) ? `${datePart}T${timePart}` : null;
 
 </body>
 </html>
+
 
 
 
