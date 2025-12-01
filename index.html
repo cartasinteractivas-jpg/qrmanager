@@ -18,7 +18,7 @@
             --font-family: 'Georgia', serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; font-family: var(--font-family ); }
+        html, body { width: 100%; height: 100%; font-family: var(--font-family  ); }
         .app-wrapper { width: 100%; min-height: 100vh; background: var(--color-blanco); color: var(--color-texto); overflow-x: hidden; }
         .video-container, .login-container, .main-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, var(--color-gris-claro) 0%, var(--color-blanco) 100%); padding: 20px; position: relative; }
         .login-container, .main-container { display: none; }
@@ -71,7 +71,7 @@
                     <source src="https://github.com/cartasinteractivas-jpg/qrmanager/raw/main/qrdinamicopresentacion.mp4" type="video/mp4">
                     Tu navegador no soporta el elemento de video.
                 </video>
-                <button class="skip-button" onclick="skipVideo( )">Saltar Video</button>
+                <button class="skip-button" onclick="skipVideo(  )">Saltar Video</button>
             </div>
         </div>
 
@@ -85,7 +85,8 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>
-                        <input type="password" id="text" required>
+                        <!-- CORRECCIÓN: type="text" para visibilidad y id="password" para que funcione el script -->
+                        <input type="text" id="password" required>
                     </div>
                     <button type="submit" class="login-button">Entrar</button>
                     <div id="loginError" class="error-message"></div>
@@ -106,7 +107,7 @@
                     <label>Dirección Actual</label>
                     <div class="url-input-wrapper">
                         <input type="text" id="urlInput" placeholder="https://ejemplo.com" readonly>
-                        <button class="edit-button" onclick="enableEditUrl( )">Editar</button>
+                        <button class="edit-button" onclick="enableEditUrl(  )">Editar</button>
                     </div>
                 </div>
                 <div id="progressBar" class="progress-bar"><div class="progress-fill"></div></div>
@@ -150,6 +151,7 @@
                     <div class="settings-item">
                         <label>Contraseña</label>
                         <div class="settings-input-wrapper">
+                            <!-- CORRECCIÓN: type="text" para visibilidad -->
                             <input type="text" id="settingsPassword" placeholder="Contraseña" readonly>
                             <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
                         </div>
@@ -174,17 +176,15 @@
     let currentUserData = null; // Almacenará todos los datos del usuario logueado
 
     // Inicializar la aplicación cuando la ventana cargue
-    window.addEventListener('load', ( ) => {
+    window.addEventListener('load', (  ) => {
         const { createClient } = window.supabase;
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Cargar último usuario para facilitar el login
         const lastUser = localStorage.getItem('lastUser');
         if (lastUser) {
             document.getElementById('email').value = lastUser;
         }
         
-        // Listener para el formulario de login
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
     });
 
@@ -214,24 +214,21 @@
         errorDiv.textContent = '';
 
         try {
-            // Hacemos una consulta para encontrar la fila exacta que coincida
             const { data, error } = await supabase
                 .from('qrs')
                 .select('*')
                 .eq('usuario', usuario)
                 .eq('clave', clave)
-                .single(); // .single() asegura que solo esperamos un resultado
+                .single();
 
             if (error || !data) {
                 errorDiv.textContent = 'Usuario o contraseña incorrectos.';
                 return;
             }
 
-            // Si se encuentra, guardamos TODOS los datos de esa fila
             currentUserData = data;
             localStorage.setItem('lastUser', usuario);
             
-            // Cargamos los datos en la interfaz
             loadUserData();
             showMainScreen();
 
@@ -244,8 +241,7 @@
         if (!currentUserData) return;
         
         document.getElementById('urlInput').value = currentUserData.url_activo;
-       generateQRCode(currentUserData.qr_imagen);
-
+        generateQRCode(currentUserData.qr_imagen);
         renderScheduleItems();
     }
 
@@ -255,29 +251,19 @@
     }
 
     // 4. FUNCIONALIDAD DEL QR Y URL
-   // 4. FUNCIONALIDAD DEL QR Y URL
-function generateQRCode(imageUrl) {
-    const qrCodeDiv = document.getElementById('qrCode');
-    qrCodeDiv.innerHTML = ''; // Limpiamos el contenedor por si acaso
+    function generateQRCode(imageUrl) {
+        const qrCodeDiv = document.getElementById('qrCode');
+        qrCodeDiv.innerHTML = '';
 
-    // Verificamos si hay una URL de imagen válida
-    if (imageUrl) {
-        // Creamos un elemento de imagen
-        const img = document.createElement('img');
-        
-        // Le asignamos la URL de la columna qr_imagen
-        img.src = imageUrl; 
-        
-        // Le damos un estilo para que se ajuste al contenedor
-        img.style.width = '180px';
-        img.style.height = '180px';
-        img.style.objectFit = 'contain'; // 'contain' para que se vea completa sin deformarse
-        
-        // Añadimos la imagen al div
-        qrCodeDiv.appendChild(img);
+        if (imageUrl) {
+            const img = document.createElement('img');
+            img.src = imageUrl; 
+            img.style.width = '180px';
+            img.style.height = '180px';
+            img.style.objectFit = 'contain';
+            qrCodeDiv.appendChild(img);
+        }
     }
-}
-
 
     function enableEditUrl() {
         const urlInput = document.getElementById('urlInput');
@@ -301,7 +287,6 @@ function generateQRCode(imageUrl) {
         updateMessage.style.display = 'none';
 
         try {
-            // Actualizamos la fila usando el ID que guardamos en el login
             const { error } = await supabase
                 .from('qrs')
                 .update({ url_activo: newUrl })
@@ -309,9 +294,8 @@ function generateQRCode(imageUrl) {
 
             if (error) throw error;
 
-            currentUserData.url_activo = newUrl; // Actualizamos nuestros datos locales
-            // ¡CORRECCIÓN! Usamos la URL de la imagen que ya tenemos, no la nueva URL de texto.
-generateQRCode(currentUserData.qr_imagen);
+            currentUserData.url_activo = newUrl;
+            generateQRCode(currentUserData.qr_imagen);
 
             urlInput.readOnly = true;
             
@@ -328,149 +312,155 @@ generateQRCode(currentUserData.qr_imagen);
     // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
     function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
     function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
+    
     function openSettingsModal() { 
         document.getElementById('settingsUser').value = currentUserData.usuario;
         document.getElementById('settingsPassword').value = currentUserData.clave;
+        // CORRECCIÓN: Asegurarse de que el campo de contraseña sea de texto al abrir
+        document.getElementById('settingsPassword').type = 'text';
         document.getElementById('settingsModal').style.display = 'block';
     }
-    function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
-
-
     
-// Reemplaza la función renderScheduleItems con esta versión mejorada
-function renderScheduleItems() {
-    const container = document.getElementById('scheduleItems');
-    container.innerHTML = '';
+    function closeSettingsModal() { 
+        // Opcional: volver a ocultar la contraseña al cerrar
+        document.getElementById('settingsPassword').type = 'password';
+        document.getElementById('settingsModal').style.display = 'none'; 
+    }
 
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    const minDate = now.toISOString().split('T')[0];
+    function renderScheduleItems() {
+        const container = document.getElementById('scheduleItems');
+        container.innerHTML = '';
 
-    for (let i = 1; i <= 3; i++) {
-        const savedTimestamp = currentUserData[`programa${i}`];
-        let savedDate = '', savedHour = '12', savedMinute = '00', savedPeriod = 'PM';
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const minDate = now.toISOString().split('T')[0];
 
-        if (savedTimestamp) {
-            const d = new Date(savedTimestamp);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        for (let i = 1; i <= 3; i++) {
+            const savedTimestamp = currentUserData[`programa${i}`];
+            let savedDate = '', savedHour = '12', savedMinute = '00', savedPeriod = 'PM';
+
+            if (savedTimestamp) {
+                const d = new Date(savedTimestamp);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                
+                savedDate = d.toISOString().split('T')[0];
+                let hours = d.getHours();
+                const minutes = d.getMinutes();
+                
+                savedPeriod = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                
+                savedHour = String(hours).padStart(2, '0');
+                savedMinute = String(minutes).padStart(2, '0');
+            }
             
-            savedDate = d.toISOString().split('T')[0];
-            let hours = d.getHours();
-            const minutes = d.getMinutes();
+            const urlValue = currentUserData[`url_programado${i}`] || '';
             
-            savedPeriod = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
+            const item = document.createElement('div');
+            item.className = 'settings-item';
             
-            savedHour = String(hours).padStart(2, '0');
-            savedMinute = String(minutes).padStart(2, '0');
+            item.innerHTML = `
+                <label>Cambio Programado ${i}</label>
+                <div class="settings-input-wrapper">
+                    <input type="date" id="scheduleDate${i}" value="${savedDate}" min="${minDate}">
+                    <input type="number" id="scheduleHour${i}" value="${savedHour}" min="1" max="12" style="width: 60px;">
+                    <span>:</span>
+                    <input type="number" id="scheduleMinute${i}" value="${savedMinute}" min="0" max="59" step="1" style="width: 60px;">
+                    <select id="schedulePeriod${i}" style="padding: 12px;">
+                        <option value="AM" ${savedPeriod === 'AM' ? 'selected' : ''}>AM</option>
+                        <option value="PM" ${savedPeriod === 'PM' ? 'selected' : ''}>PM</option>
+                    </select>
+                </div>
+                <div class="settings-input-wrapper" style="margin-top: 10px;">
+                     <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
+                </div>
+            `;
+            container.appendChild(item);
         }
-        
-        const urlValue = currentUserData[`url_programado${i}`] || '';
-        
-        const item = document.createElement('div');
-        item.className = 'settings-item';
-        
-        item.innerHTML = `
-            <label>Cambio Programado ${i}</label>
-            <div class="settings-input-wrapper">
-                <input type="date" id="scheduleDate${i}" value="${savedDate}" min="${minDate}">
-                <input type="number" id="scheduleHour${i}" value="${savedHour}" min="1" max="12" style="width: 60px;">
-                <span>:</span>
-                <input type="number" id="scheduleMinute${i}" value="${savedMinute}" min="0" max="59" step="1" style="width: 60px;">
-                <select id="schedulePeriod${i}" style="padding: 12px;">
-                    <option value="AM" ${savedPeriod === 'AM' ? 'selected' : ''}>AM</option>
-                    <option value="PM" ${savedPeriod === 'PM' ? 'selected' : ''}>PM</option>
-                </select>
-            </div>
-            <div class="settings-input-wrapper" style="margin-top: 10px;">
-                 <input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}">
-            </div>
-        `;
-        container.appendChild(item);
     }
-}
 
-// Función para guardar la programación (versión correcta y única)
-async function saveSchedule() {
-    const updates = {};
-    for (let i = 1; i <= 3; i++) {
-        updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
+    async function saveSchedule() {
+        const updates = {};
+        for (let i = 1; i <= 3; i++) {
+            updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
 
-        const datePart = document.getElementById(`scheduleDate${i}`).value;
-        let hourPart = parseInt(document.getElementById(`scheduleHour${i}`).value, 10);
-        const minutePart = document.getElementById(`scheduleMinute${i}`).value;
-        const periodPart = document.getElementById(`schedulePeriod${i}`).value;
+            const datePart = document.getElementById(`scheduleDate${i}`).value;
+            let hourPart = parseInt(document.getElementById(`scheduleHour${i}`).value, 10);
+            const minutePart = document.getElementById(`scheduleMinute${i}`).value;
+            const periodPart = document.getElementById(`schedulePeriod${i}`).value;
 
-        if (periodPart === 'PM' && hourPart < 12) {
-            hourPart += 12;
-        }
-        if (periodPart === 'AM' && hourPart === 12) {
-            hourPart = 0;
+            if (periodPart === 'PM' && hourPart < 12) {
+                hourPart += 12;
+            }
+            if (periodPart === 'AM' && hourPart === 12) {
+                hourPart = 0;
+            }
+
+            const dateValue = (datePart && minutePart) ? `${datePart}T${String(hourPart).padStart(2, '0')}:${minutePart}:00` : null;
+            
+            updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
         }
 
-        const dateValue = (datePart && minutePart) ? `${datePart}T${String(hourPart).padStart(2, '0')}:${minutePart}:00` : null;
-        
-        updates[`programa${i}`] = dateValue ? new Date(dateValue).toISOString() : null;
+        try {
+            const { data, error } = await supabase
+                .from('qrs')
+                .update(updates)
+                .eq('id', currentUserData.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            currentUserData = data;
+            alert('Programación guardada correctamente');
+            closeScheduleModal();
+
+        } catch (error) {
+            alert('Error al guardar la programación: ' + error.message);
+        }
     }
 
-    try {
-        const { data, error } = await supabase
-            .from('qrs')
-            .update(updates)
-            .eq('id', currentUserData.id)
-            .select()
-            .single();
-
-        if (error) throw error;
-        
-        currentUserData = data;
-        alert('Programación guardada correctamente');
-        closeScheduleModal();
-
-    } catch (error) {
-        alert('Error al guardar la programación: ' + error.message);
-    }
-}
-
-function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
-
-function enableEditSettingsPassword() { 
-    const passInput = document.getElementById('settingsPassword'); 
-    passInput.type = 'text'; 
-    passInput.readOnly = false; 
-    passInput.focus(); 
-}
-
-async function updateUserSettings() {
-    const newUser = document.getElementById('settingsUser').value.trim();
-    const newPassword = document.getElementById('settingsPassword').value.trim();
-
-    if (!newUser || !newPassword) {
-        alert('El usuario y la contraseña no pueden estar vacíos.');
-        return;
+    function enableEditSettingsUser() { 
+        document.getElementById('settingsUser').readOnly = false; 
+        document.getElementById('settingsUser').focus(); 
     }
 
-    try {
-        const { data, error } = await supabase
-            .from('qrs')
-            .update({ usuario: newUser, clave: newPassword })
-            .eq('id', currentUserData.id)
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        currentUserData = data;
-        localStorage.setItem('lastUser', newUser);
-        alert('Usuario y contraseña actualizados correctamente.');
-        closeSettingsModal();
-
-    } catch (error) {
-        alert('Error al actualizar los datos: ' + error.message);
+    function enableEditSettingsPassword() { 
+        const passInput = document.getElementById('settingsPassword'); 
+        passInput.type = 'text'; 
+        passInput.readOnly = false; 
+        passInput.focus(); 
     }
-}
 
+    async function updateUserSettings() {
+        const newUser = document.getElementById('settingsUser').value.trim();
+        const newPassword = document.getElementById('settingsPassword').value.trim();
+
+        if (!newUser || !newPassword) {
+            alert('El usuario y la contraseña no pueden estar vacíos.');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('qrs')
+                .update({ usuario: newUser, clave: newPassword })
+                .eq('id', currentUserData.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            currentUserData = data;
+            localStorage.setItem('lastUser', newUser);
+            alert('Usuario y contraseña actualizados correctamente.');
+            closeSettingsModal();
+
+        } catch (error) {
+            alert('Error al actualizar los datos: ' + error.message);
+        }
+    }
 
     window.onclick = function(event) {
         if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
@@ -480,8 +470,3 @@ async function updateUserSettings() {
 
 </body>
 </html>
-
-
-
-
-
