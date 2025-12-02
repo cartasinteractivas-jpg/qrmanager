@@ -269,42 +269,79 @@
         urlInput.select();
     }
 
-    async function updateUrl() {
-        const urlInput = document.getElementById('urlInput');
-        const newUrl = urlInput.value.trim();
+  async function updateUrl() {
+    const urlInput = document.getElementById('urlInput');
+    let newUrl = urlInput.value.trim();
 
-        if (!newUrl || newUrl === currentUserData.url_activo) {
-            urlInput.readOnly = true;
-            return;
+    // --- INICIO DE LA LÓGICA INTELIGENTE ---
+
+    // Función para formatear la URL de manera inteligente
+    function formatarUrlInteligente(url) {
+        if (!url) return ''; // Si no hay nada, no hacemos nada
+
+        // 1. Si no empieza con http:// o https://, le añadimos https://
+        if (!/^https?:\/\//i.test(url )) {
+            url = 'https://' + url;
         }
 
-        const progressBar = document.getElementById('progressBar');
-        const updateMessage = document.getElementById('updateMessage');
-        progressBar.style.display = 'block';
-        updateMessage.style.display = 'none';
-
-        try {
-            const { error } = await supabase
-                .from('qrs')
-                .update({ url_activo: newUrl })
-                .eq('id', currentUserData.id);
-
-            if (error) throw error;
-
-            currentUserData.url_activo = newUrl;
-            generateQRCode(currentUserData.qr_imagen);
-
-            urlInput.readOnly = true;
-            
-            progressBar.style.display = 'none';
-            updateMessage.style.display = 'block';
-            setTimeout(() => updateMessage.style.display = 'none', 3000);
-
-        } catch (error) {
-            alert('Error al actualizar la URL: ' + error.message);
-            progressBar.style.display = 'none';
+        // 2. Si después de 'https://' no tiene 'www.' y es un dominio simple (sin puntos ), añadimos 'www.'
+        // Ejemplo: 'https://mipagina' -> 'https://www.mipagina'
+        let urlSinProtocolo = url.substring(url.indexOf('//' ) + 2);
+        if (!urlSinProtocolo.startsWith('www.') && !urlSinProtocolo.includes('.')) {
+            url = 'https://www.' + urlSinProtocolo;
         }
+
+        // 3. Si no termina en un TLD conocido (como .com, .net, etc. ) y no tiene '/', le añadimos '.com'
+        // Esto asume que '.com' es el caso más común.
+        // Regex para verificar si termina en un punto seguido de 2 a 6 letras.
+        if (!/\.[a-z]{2,6}\/?$/i.test(url) && !url.includes('/')) {
+             url += '.com';
+        }
+
+        return url;
     }
+
+    // Aplicamos el formateo inteligente a la URL introducida
+    const urlFormateada = formatarUrlInteligente(newUrl);
+    
+    // Actualizamos el campo de texto para que el usuario vea la URL corregida
+    urlInput.value = urlFormateada;
+
+    // --- FIN DE LA LÓGICA INTELIGENTE ---
+
+    if (!urlFormateada || urlFormateada === currentUserData.url_activo) {
+        urlInput.readOnly = true;
+        return;
+    }
+
+    const progressBar = document.getElementById('progressBar');
+    const updateMessage = document.getElementById('updateMessage');
+    progressBar.style.display = 'block';
+    updateMessage.style.display = 'none';
+
+    try {
+        // Usamos la URL formateada para la actualización
+        const { error } = await supabase
+            .from('qrs')
+            .update({ url_activo: urlFormateada }) // <-- Guardamos la URL corregida
+            .eq('id', currentUserData.id);
+
+        if (error) throw error;
+
+        currentUserData.url_activo = urlFormateada; // Actualizamos datos locales
+        generateQRCode(currentUserData.qr_imagen);
+
+        urlInput.readOnly = true;
+        
+        progressBar.style.display = 'none';
+        updateMessage.style.display = 'block';
+        setTimeout(() => updateMessage.style.display = 'none', 3000);
+
+    } catch (error) {
+        alert('Error al actualizar la URL: ' + error.message);
+        progressBar.style.display = 'none';
+    }
+}
 
     // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
     function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
@@ -429,3 +466,4 @@
 
 </body>
 </html>
+
