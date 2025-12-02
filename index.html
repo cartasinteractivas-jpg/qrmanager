@@ -269,79 +269,63 @@
         urlInput.select();
     }
 
-  async function updateUrl() {
-    const urlInput = document.getElementById('urlInput');
-    let newUrl = urlInput.value.trim();
-
-    // --- INICIO DE LA LÓGICA INTELIGENTE ---
-
-    // Función para formatear la URL de manera inteligente
+    // FUNCIÓN GLOBAL PARA AUTOCOMPLETADO INTELIGENTE DE URL
     function formatarUrlInteligente(url) {
-        if (!url) return ''; // Si no hay nada, no hacemos nada
+        if (!url || url.trim() === '') return '';
+        url = url.trim();
 
-        // 1. Si no empieza con http:// o https://, le añadimos https://
         if (!/^https?:\/\//i.test(url )) {
             url = 'https://' + url;
         }
 
-        // 2. Si después de 'https://' no tiene 'www.' y es un dominio simple (sin puntos ), añadimos 'www.'
-        // Ejemplo: 'https://mipagina' -> 'https://www.mipagina'
         let urlSinProtocolo = url.substring(url.indexOf('//' ) + 2);
         if (!urlSinProtocolo.startsWith('www.') && !urlSinProtocolo.includes('.')) {
             url = 'https://www.' + urlSinProtocolo;
         }
 
-        // 3. Si no termina en un TLD conocido (como .com, .net, etc. ) y no tiene '/', le añadimos '.com'
-        // Esto asume que '.com' es el caso más común.
-        // Regex para verificar si termina en un punto seguido de 2 a 6 letras.
-        if (!/\.[a-z]{2,6}\/?$/i.test(url) && !url.includes('/')) {
+        if (!/\.[a-z]{2,6}\/?$/i.test(url ) && !url.includes('/')) {
              url += '.com';
         }
-
         return url;
     }
 
-    // Aplicamos el formateo inteligente a la URL introducida
-    const urlFormateada = formatarUrlInteligente(newUrl);
-    
-    // Actualizamos el campo de texto para que el usuario vea la URL corregida
-    urlInput.value = urlFormateada;
+    async function updateUrl() {
+        const urlInput = document.getElementById('urlInput');
+        const urlFormateada = formatarUrlInteligente(urlInput.value);
+        urlInput.value = urlFormateada;
 
-    // --- FIN DE LA LÓGICA INTELIGENTE ---
+        if (!urlFormateada || urlFormateada === currentUserData.url_activo) {
+            urlInput.readOnly = true;
+            return;
+        }
 
-    if (!urlFormateada || urlFormateada === currentUserData.url_activo) {
-        urlInput.readOnly = true;
-        return;
+        const progressBar = document.getElementById('progressBar');
+        const updateMessage = document.getElementById('updateMessage');
+        progressBar.style.display = 'block';
+        updateMessage.style.display = 'none';
+
+        try {
+            const { error } = await supabase
+                .from('qrs')
+                .update({ url_activo: urlFormateada })
+                .eq('id', currentUserData.id);
+
+            if (error) throw error;
+
+            currentUserData.url_activo = urlFormateada;
+            generateQRCode(currentUserData.qr_imagen);
+
+            urlInput.readOnly = true;
+            
+            progressBar.style.display = 'none';
+            updateMessage.style.display = 'block';
+            setTimeout(() => updateMessage.style.display = 'none', 3000);
+
+        } catch (error) {
+            alert('Error al actualizar la URL: ' + error.message);
+            progressBar.style.display = 'none';
+        }
     }
-
-    const progressBar = document.getElementById('progressBar');
-    const updateMessage = document.getElementById('updateMessage');
-    progressBar.style.display = 'block';
-    updateMessage.style.display = 'none';
-
-    try {
-        // Usamos la URL formateada para la actualización
-        const { error } = await supabase
-            .from('qrs')
-            .update({ url_activo: urlFormateada }) // <-- Guardamos la URL corregida
-            .eq('id', currentUserData.id);
-
-        if (error) throw error;
-
-        currentUserData.url_activo = urlFormateada; // Actualizamos datos locales
-        generateQRCode(currentUserData.qr_imagen);
-
-        urlInput.readOnly = true;
-        
-        progressBar.style.display = 'none';
-        updateMessage.style.display = 'block';
-        setTimeout(() => updateMessage.style.display = 'none', 3000);
-
-    } catch (error) {
-        alert('Error al actualizar la URL: ' + error.message);
-        progressBar.style.display = 'none';
-    }
-}
 
     // 5. LÓGICA DE MODALES (PROGRAMACIÓN Y AJUSTES)
     function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
@@ -355,11 +339,10 @@
     }
     
     function closeSettingsModal() { 
-        document.getElementById('settingsPassword').type = 'text'; // Dejarlo como texto para consistencia
+        document.getElementById('settingsPassword').type = 'text';
         document.getElementById('settingsModal').style.display = 'none'; 
     }
 
-    // VERSIÓN SIMPLIFICADA: SOLO FECHA
     function renderScheduleItems() {
         const container = document.getElementById('scheduleItems');
         container.innerHTML = '';
@@ -389,13 +372,23 @@
         }
     }
 
-    // VERSIÓN SIMPLIFICADA: SOLO FECHA
     async function saveSchedule() {
         const updates = {};
         for (let i = 1; i <= 3; i++) {
-            updates[`url_programado${i}`] = document.getElementById(`scheduleUrl${i}`).value;
-            const datePart = document.getElementById(`scheduleDate${i}`).value;
-            updates[`programa${i}`] = datePart || null;
+            const urlInput = document.getElementById(`scheduleUrl${i}`);
+            const urlFormateada = formatarUrlInteligente(urlInput.value);
+            urlInput.value = urlFormateada;
+
+            updates[`url_programado${i}`] = urlFormateada || null;
+            
+            const dateInput = document.getElementById(`scheduleDate${i}`);
+            
+            if (!urlFormateada) {
+                updates[`programa${i}`] = null;
+                dateInput.value = '';
+            } else {
+                updates[`programa${i}`] = dateInput.value || null;
+            }
         }
 
         try {
@@ -466,4 +459,3 @@
 
 </body>
 </html>
-
