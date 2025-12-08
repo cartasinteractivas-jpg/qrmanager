@@ -205,8 +205,8 @@
     // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
     async function handleLogin(event) {
         event.preventDefault();
-        const usuario = document.getElementById('email').value;
-        const clave = document.getElementById('password').value;
+        const usuario = document.getElementById('email').value.trim(); // <-- Aquí está
+    const clave = document.getElementById('password').value.trim(); // <-- Y aquí
         const errorDiv = document.getElementById('loginError');
         errorDiv.textContent = '';
 
@@ -459,3 +459,4 @@
 
 </body>
 </html>
+
