@@ -68,19 +68,18 @@
             background-color: var(--color-blanco);
             border-radius: 8px;
             border: 2px solid var(--color-dorado);
-            overflow: hidden; /* Oculta lo que se sale del contenedor */
+            overflow: hidden;
             position: relative;
-            height: 220px; /* Altura fija para el contenedor */
-            cursor: grab; /* Indica que se puede arrastrar */
+            height: 220px;
         }
         .card-slider {
             display: flex;
-            width: 200%; /* El doble de ancho para contener las dos vistas */
+            width: 200%;
             height: 100%;
-            transition: transform 0.4s ease-in-out; /* Animación suave */
+            transition: transform 0.4s ease-in-out;
         }
         .card {
-            width: 50%; /* Cada tarjeta ocupa la mitad del slider */
+            width: 50%;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -123,6 +122,31 @@
         }
         .dot.active {
             background-color: var(--color-dorado);
+        }
+        /* Estilos para los nuevos botones de navegación */
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+        .slider-nav:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        #prev-card-btn {
+            left: 10px;
+        }
+        #next-card-btn {
+            right: 10px;
         }
         /* --- FIN DE NUEVOS ESTILOS --- */
 
@@ -168,6 +192,7 @@
                 
                 <!-- ¡AQUÍ ESTÁ EL CAMBIO PRINCIPAL! -->
                 <div class="qr-section">
+                    <button id="prev-card-btn" class="slider-nav">&lt;</button>
                     <div class="card-slider">
                         <div class="card" id="qr-card">
                             <div id="qrCode"></div>
@@ -177,6 +202,7 @@
                             <p class="visits-count" id="visitsCount">0</p>
                         </div>
                     </div>
+                    <button id="next-card-btn" class="slider-nav">&gt;</button>
                     <div class="swipe-indicator">
                         <div class="dot active" id="dot-qr"></div>
                         <div class="dot" id="dot-stats"></div>
@@ -266,8 +292,8 @@
         
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
         
-        // --- ¡NUEVA LÓGICA DE SWIPE! ---
-        setupSwipe();
+        // --- ¡NUEVA LÓGICA DE BOTONES! ---
+        setupSliderButtons();
     });
 
     // 2. NAVEGACIÓN Y UI (SIN CAMBIOS)
@@ -275,47 +301,30 @@
     function showMainScreen() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainScreen').style.display = 'flex'; }
     function showLoginScreen() { document.getElementById('mainScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('password').value = ''; }
 
-    // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
+    // 3. LÓGICA DE AUTENTICACIÓN Y DATOS (SIN CAMBIOS)
     async function handleLogin(event) {
         event.preventDefault();
         const usuario = document.getElementById('email').value.trim();
         const clave = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('loginError');
         errorDiv.textContent = '';
-
         try {
-            const { data, error } = await supabase
-                .from('qrs')
-                .select('*')
-                .eq('usuario', usuario)
-                .eq('clave', clave)
-                .single();
-
-            if (error || !data) {
-                errorDiv.textContent = 'Usuario o contraseña incorrectos.';
-                return;
-            }
-
+            const { data, error } = await supabase.from('qrs').select('*').eq('usuario', usuario).eq('clave', clave).single();
+            if (error || !data) { errorDiv.textContent = 'Usuario o contraseña incorrectos.'; return; }
             currentUserData = data;
             localStorage.setItem('lastUser', usuario);
-            
             loadUserData();
             showMainScreen();
-
         } catch (error) {
             errorDiv.textContent = 'Error en la autenticación: ' + error.message;
         }
     }
 
-    // --- FUNCIÓN MODIFICADA PARA CARGAR LAS VISITAS ---
     function loadUserData() {
         if (!currentUserData) return;
-        
         document.getElementById('urlInput').value = currentUserData.url_activo;
         generateQRCode(currentUserData.qr_imagen);
         renderScheduleItems();
-        
-        // ¡NUEVO! Actualizamos el contador de visitas
         document.getElementById('visitsCount').textContent = currentUserData.visitas || 0;
     }
 
@@ -436,15 +445,13 @@
         if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
     }
 
-    // --- ¡NUEVA SECCIÓN PARA EL CARRUSEL DE QR/VISITAS! ---
-    function setupSwipe() {
+    // --- ¡NUEVA SECCIÓN PARA EL CARRUSEL CON BOTONES! ---
+    function setupSliderButtons() {
         const slider = document.querySelector('.card-slider');
-        const qrSection = document.querySelector('.qr-section');
         const dotQr = document.getElementById('dot-qr');
         const dotStats = document.getElementById('dot-stats');
-        let isDown = false;
-        let startX;
-        let scrollLeft;
+        const prevBtn = document.getElementById('prev-card-btn');
+        const nextBtn = document.getElementById('next-card-btn');
         let currentCard = 0; // 0 para QR, 1 para Stats
 
         const showCard = (index) => {
@@ -455,36 +462,19 @@
             dotStats.classList.toggle('active', index === 1);
         };
 
-        const handleGesture = (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX || e.touches[0].pageX;
-            const walk = (x - startX);
-            if (Math.abs(walk) > 50) { // Umbral de deslizamiento
-                if (walk < 0 && currentCard === 0) { // Deslizar a la izquierda
-                    showCard(1);
-                } else if (walk > 0 && currentCard === 1) { // Deslizar a la derecha
-                    showCard(0);
-                }
-                isDown = false; // Terminar el gesto
+        prevBtn.addEventListener('click', () => {
+            // Si estamos en la tarjeta de estadísticas (1), vamos a la de QR (0)
+            if (currentCard === 1) {
+                showCard(0);
             }
-        };
-
-        qrSection.addEventListener('mousedown', (e) => {
-            isDown = true;
-            startX = e.pageX;
-        });
-        qrSection.addEventListener('touchstart', (e) => {
-            isDown = true;
-            startX = e.touches[0].pageX;
         });
 
-        qrSection.addEventListener('mouseleave', () => { isDown = false; });
-        qrSection.addEventListener('mouseup', () => { isDown = false; });
-        qrSection.addEventListener('touchend', () => { isDown = false; });
-
-        qrSection.addEventListener('mousemove', handleGesture);
-        qrSection.addEventListener('touchmove', handleGesture);
+        nextBtn.addEventListener('click', () => {
+            // Si estamos en la tarjeta de QR (0), vamos a la de estadísticas (1)
+            if (currentCard === 0) {
+                showCard(1);
+            }
+        });
     }
 </script>
 
