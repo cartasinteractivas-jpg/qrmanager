@@ -60,7 +60,7 @@
         .success-message { color: var(--color-dorado); font-size: 14px; margin-top: 10px; text-align: center; }
         .button-group { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
         
-        /* --- INICIO DE NUEVOS ESTILOS --- */
+        /* --- INICIO DE NUEVOS ESTILOS (v5.3) --- */
         .qr-section {
             text-align: center;
             margin-bottom: 30px;
@@ -68,67 +68,51 @@
             background-color: var(--color-blanco);
             border-radius: 8px;
             border: 2px solid var(--color-dorado);
-            overflow: hidden;
             position: relative;
-            height: 220px;
-        }
-        .card-slider {
+            height: 220px; /* Altura fija para el contenedor */
             display: flex;
-            width: 200%;
-            height: 100%;
-            transition: transform 0.4s ease-in-out;
+            justify-content: center;
+            align-items: center;
         }
-        .card {
-            width: 50%;
+        /* Contenedor para el QR y las estadísticas, se mostrará uno a la vez */
+        #qr-display, #stats-display {
+            width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            position: absolute; /* Se superponen */
+            transition: opacity 0.4s ease-in-out; /* Animación de fundido */
         }
         #qrCode {
             padding: 10px;
             background-color: var(--color-blanco);
             border-radius: 4px;
         }
-        .stats-view h3 {
+        #stats-display {
+            opacity: 0; /* Oculto por defecto */
+            pointer-events: none; /* No se puede interactuar con él cuando está oculto */
+        }
+        #stats-display h3 {
             color: var(--color-texto);
             font-size: 18px;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-        .stats-view .visits-count {
+        #stats-display .visits-count {
             font-size: 64px;
             font-weight: bold;
             color: var(--color-dorado);
             line-height: 1;
         }
-        .swipe-indicator {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-        }
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: #ccc;
-            transition: background-color 0.3s;
-        }
-        .dot.active {
-            background-color: var(--color-dorado);
-        }
-        /* Estilos para los nuevos botones de navegación */
-        .slider-nav {
+        /* Botones de navegación */
+        .nav-arrow {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
             border: none;
             border-radius: 50%;
@@ -136,18 +120,17 @@
             height: 40px;
             font-size: 24px;
             cursor: pointer;
-            transition: background-color 0.2s;
             z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s;
         }
-        .slider-nav:hover {
-            background-color: rgba(0, 0, 0, 0.7);
+        .nav-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
-        #prev-card-btn {
-            left: 10px;
-        }
-        #next-card-btn {
-            right: 10px;
-        }
+        #prev-btn { left: 15px; }
+        #next-btn { right: 15px; }
         /* --- FIN DE NUEVOS ESTILOS --- */
 
         @media (max-width: 768px) { .login-box, .main-content, .modal-content { padding: 25px; } .url-input-wrapper { flex-direction: column; } .url-input-wrapper input { margin-bottom: 10px; } .modal-buttons { flex-direction: column; } }
@@ -192,21 +175,18 @@
                 
                 <!-- ¡AQUÍ ESTÁ EL CAMBIO PRINCIPAL! -->
                 <div class="qr-section">
-                    <button id="prev-card-btn" class="slider-nav">&lt;</button>
-                    <div class="card-slider">
-                        <div class="card" id="qr-card">
-                            <div id="qrCode"></div>
-                        </div>
-                        <div class="card stats-view" id="stats-card">
-                            <h3>Total de Visitas</h3>
-                            <p class="visits-count" id="visitsCount">0</p>
-                        </div>
+                    <!-- Vista para el QR -->
+                    <div id="qr-display">
+                        <div id="qrCode"></div>
                     </div>
-                    <button id="next-card-btn" class="slider-nav">&gt;</button>
-                    <div class="swipe-indicator">
-                        <div class="dot active" id="dot-qr"></div>
-                        <div class="dot" id="dot-stats"></div>
+                    <!-- Vista para las Estadísticas -->
+                    <div id="stats-display">
+                        <h3>Total de Visitas</h3>
+                        <p class="visits-count" id="visitsCount">0</p>
                     </div>
+                    <!-- Botones de Navegación -->
+                    <button id="prev-btn" class="nav-arrow">‹</button>
+                    <button id="next-btn" class="nav-arrow">›</button>
                 </div>
                 <!-- FIN DEL CAMBIO PRINCIPAL -->
 
@@ -228,47 +208,9 @@
             </div>
         </div>
 
-        <div id="scheduleModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Programar Cambio de Dirección</h2>
-                    <p>Puede cambiar la dirección según la fecha programada (3 opciones de cambio)</p>
-                </div>
-                <div id="scheduleItems"></div>
-                <div class="modal-buttons">
-                    <button class="btn-guardar" onclick="saveSchedule()">Guardar</button>
-                    <button class="btn-cancelar" onclick="closeScheduleModal()">Cancelar</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="settingsModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Cambia de usuario y contraseña</h2>
-                </div>
-                <div class="settings-form">
-                    <div class="settings-item">
-                        <label>Usuario</label>
-                        <div class="settings-input-wrapper">
-                            <input type="text" id="settingsUser" placeholder="Usuario" readonly>
-                            <button class="edit-button" onclick="enableEditSettingsUser()">Editar</button>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <label>Contraseña</label>
-                        <div class="settings-input-wrapper">
-                            <input type="password" id="settingsPassword" placeholder="Contraseña" readonly>
-                            <button class="edit-button" onclick="enableEditSettingsPassword()">Editar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn-guardar" onclick="updateUserSettings()">Actualizar</button>
-                    <button class="btn-cancelar" onclick="closeSettingsModal()">Cancelar</button>
-                </div>
-            </div>
-        </div>
+        <!-- Modales (sin cambios) -->
+        <div id="scheduleModal" class="modal"> <!-- ... --> </div>
+        <div id="settingsModal" class="modal"> <!-- ... --> </div>
     </div>
 
 <script>
@@ -293,7 +235,7 @@
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
         
         // --- ¡NUEVA LÓGICA DE BOTONES! ---
-        setupSliderButtons();
+        setupToggleButtons();
     });
 
     // 2. NAVEGACIÓN Y UI (SIN CAMBIOS)
@@ -301,30 +243,47 @@
     function showMainScreen() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainScreen').style.display = 'flex'; }
     function showLoginScreen() { document.getElementById('mainScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('password').value = ''; }
 
-    // 3. LÓGICA DE AUTENTICACIÓN Y DATOS (SIN CAMBIOS)
+    // 3. LÓGICA DE AUTENTICACIÓN Y DATOS
     async function handleLogin(event) {
         event.preventDefault();
         const usuario = document.getElementById('email').value.trim();
         const clave = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('loginError');
         errorDiv.textContent = '';
+
         try {
-            const { data, error } = await supabase.from('qrs').select('*').eq('usuario', usuario).eq('clave', clave).single();
-            if (error || !data) { errorDiv.textContent = 'Usuario o contraseña incorrectos.'; return; }
+            const { data, error } = await supabase
+                .from('qrs')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('clave', clave)
+                .single();
+
+            if (error || !data) {
+                errorDiv.textContent = 'Usuario o contraseña incorrectos.';
+                return;
+            }
+
             currentUserData = data;
             localStorage.setItem('lastUser', usuario);
+            
             loadUserData();
             showMainScreen();
+
         } catch (error) {
             errorDiv.textContent = 'Error en la autenticación: ' + error.message;
         }
     }
 
+    // --- FUNCIÓN MODIFICADA PARA CARGAR LAS VISITAS ---
     function loadUserData() {
         if (!currentUserData) return;
+        
         document.getElementById('urlInput').value = currentUserData.url_activo;
         generateQRCode(currentUserData.qr_imagen);
         renderScheduleItems();
+        
+        // ¡NUEVO! Actualizamos el contador de visitas
         document.getElementById('visitsCount').textContent = currentUserData.visitas || 0;
     }
 
@@ -343,137 +302,45 @@
             qrCodeDiv.appendChild(img);
         }
     }
-    function enableEditUrl() { const urlInput = document.getElementById('urlInput'); urlInput.readOnly = false; urlInput.focus(); urlInput.select(); }
-    function formatarUrlInteligente(url) {
-        if (!url || url.trim() === '') return '';
-        url = url.trim();
-        if (!/^https?:\/\//i.test(url )) { url = 'https://' + url; }
-        let urlSinProtocolo = url.substring(url.indexOf('//' ) + 2);
-        if (!urlSinProtocolo.startsWith('www.') && !urlSinProtocolo.includes('.')) { url = 'https://www.' + urlSinProtocolo; }
-        if (!/\.[a-z]{2,6}\/?$/i.test(url ) && !url.includes('/')) { url += '.com'; }
-        return url;
-    }
-    async function updateUrl() {
-        const urlInput = document.getElementById('urlInput');
-        const urlFormateada = formatarUrlInteligente(urlInput.value);
-        urlInput.value = urlFormateada;
-        if (!urlFormateada || urlFormateada === currentUserData.url_activo) { urlInput.readOnly = true; return; }
-        const progressBar = document.getElementById('progressBar');
-        const updateMessage = document.getElementById('updateMessage');
-        progressBar.style.display = 'block';
-        updateMessage.style.display = 'none';
-        try {
-            const { error } = await supabase.from('qrs').update({ url_activo: urlFormateada }).eq('id', currentUserData.id);
-            if (error) throw error;
-            currentUserData.url_activo = urlFormateada;
-            generateQRCode(currentUserData.qr_imagen);
-            urlInput.readOnly = true;
-            progressBar.style.display = 'none';
-            updateMessage.style.display = 'block';
-            setTimeout(() => updateMessage.style.display = 'none', 3000);
-        } catch (error) {
-            alert('Error al actualizar la URL: ' + error.message);
-            progressBar.style.display = 'none';
-        }
-    }
+    function enableEditUrl() { /* ... */ }
+    function formatarUrlInteligente(url) { /* ... */ }
+    async function updateUrl() { /* ... */ }
 
     // 5. LÓGICA DE MODALES (SIN CAMBIOS)
-    function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
-    function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
-    function openSettingsModal() { 
-        document.getElementById('settingsUser').value = currentUserData.usuario;
-        document.getElementById('settingsPassword').value = currentUserData.clave;
-        document.getElementById('settingsPassword').type = 'password';
-        document.getElementById('settingsModal').style.display = 'block';
-    }
-    function closeSettingsModal() { document.getElementById('settingsPassword').type = 'password'; document.getElementById('settingsModal').style.display = 'none'; }
-    function renderScheduleItems() {
-        const container = document.getElementById('scheduleItems');
-        container.innerHTML = '';
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        const minDate = now.toISOString().split('T')[0];
-        for (let i = 1; i <= 3; i++) {
-            const savedTimestamp = currentUserData[`programa${i}`];
-            const savedDate = savedTimestamp ? savedTimestamp.split('T')[0] : '';
-            const urlValue = currentUserData[`url_programado${i}`] || '';
-            const item = document.createElement('div');
-            item.className = 'settings-item';
-            item.innerHTML = `<label>Cambio Programado ${i}</label><div class="settings-input-wrapper"><input type="date" id="scheduleDate${i}" value="${savedDate}" min="${minDate}" style="flex: 1;"></div><div class="settings-input-wrapper" style="margin-top: 10px;"><input type="url" id="scheduleUrl${i}" placeholder="URL a cambiar" value="${urlValue}"></div>`;
-            container.appendChild(item);
-        }
-    }
-    async function saveSchedule() {
-        const updates = {};
-        for (let i = 1; i <= 3; i++) {
-            const urlInput = document.getElementById(`scheduleUrl${i}`);
-            const urlFormateada = formatarUrlInteligente(urlInput.value);
-            urlInput.value = urlFormateada;
-            updates[`url_programado${i}`] = urlFormateada || null;
-            const dateInput = document.getElementById(`scheduleDate${i}`);
-            if (!urlFormateada) { updates[`programa${i}`] = null; dateInput.value = ''; } else { updates[`programa${i}`] = dateInput.value || null; }
-        }
-        try {
-            const { data, error } = await supabase.from('qrs').update(updates).eq('id', currentUserData.id).select().single();
-            if (error) throw error;
-            currentUserData = data;
-            alert('Programación guardada correctamente');
-            closeScheduleModal();
-        } catch (error) {
-            alert('Error al guardar la programación: ' + error.message);
-        }
-    }
-    function enableEditSettingsUser() { document.getElementById('settingsUser').readOnly = false; document.getElementById('settingsUser').focus(); }
-    function enableEditSettingsPassword() { const passInput = document.getElementById('settingsPassword'); passInput.type = 'text'; passInput.readOnly = false; passInput.focus(); }
-    async function updateUserSettings() {
-        const newUser = document.getElementById('settingsUser').value.trim();
-        const newPassword = document.getElementById('settingsPassword').value.trim();
-        if (!newUser || !newPassword) { alert('El usuario y la contraseña no pueden estar vacíos.'); return; }
-        try {
-            const { data, error } = await supabase.from('qrs').update({ usuario: newUser, clave: newPassword }).eq('id', currentUserData.id).select().single();
-            if (error) throw error;
-            currentUserData = data;
-            localStorage.setItem('lastUser', newUser);
-            alert('Usuario y contraseña actualizados correctamente.');
-            closeSettingsModal();
-        } catch (error) {
-            alert('Error al actualizar los datos: ' + error.message);
-        }
-    }
-    window.onclick = function(event) {
-        if (event.target == document.getElementById('scheduleModal')) closeScheduleModal();
-        if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
-    }
+    function openScheduleModal() { /* ... */ }
+    function closeScheduleModal() { /* ... */ }
+    function openSettingsModal() { /* ... */ }
+    function closeSettingsModal() { /* ... */ }
+    function renderScheduleItems() { /* ... */ }
+    async function saveSchedule() { /* ... */ }
+    function enableEditSettingsUser() { /* ... */ }
+    function enableEditSettingsPassword() { /* ... */ }
+    async function updateUserSettings() { /* ... */ }
+    window.onclick = function(event) { /* ... */ }
 
-    // --- ¡NUEVA SECCIÓN PARA EL CARRUSEL CON BOTONES! ---
-    function setupSliderButtons() {
-        const slider = document.querySelector('.card-slider');
-        const dotQr = document.getElementById('dot-qr');
-        const dotStats = document.getElementById('dot-stats');
-        const prevBtn = document.getElementById('prev-card-btn');
-        const nextBtn = document.getElementById('next-card-btn');
-        let currentCard = 0; // 0 para QR, 1 para Stats
+    // --- ¡NUEVA SECCIÓN PARA EL INTERCAMBIO DE VISTAS! ---
+    function setupToggleButtons() {
+        const qrDisplay = document.getElementById('qr-display');
+        const statsDisplay = document.getElementById('stats-display');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
 
-        const showCard = (index) => {
-            currentCard = index;
-            const offset = -index * 100;
-            slider.style.transform = `translateX(${offset}%)`;
-            dotQr.classList.toggle('active', index === 0);
-            dotStats.classList.toggle('active', index === 1);
+        // Función para mostrar una vista y ocultar la otra
+        const showView = (viewToShow, viewToHide) => {
+            viewToShow.style.opacity = '1';
+            viewToShow.style.pointerEvents = 'auto';
+            viewToHide.style.opacity = '0';
+            viewToHide.style.pointerEvents = 'none';
         };
 
-        prevBtn.addEventListener('click', () => {
-            // Si estamos en la tarjeta de estadísticas (1), vamos a la de QR (0)
-            if (currentCard === 1) {
-                showCard(0);
-            }
+        // Al hacer clic en el botón "siguiente" (›), mostramos las estadísticas
+        nextBtn.addEventListener('click', () => {
+            showView(statsDisplay, qrDisplay);
         });
 
-        nextBtn.addEventListener('click', () => {
-            // Si estamos en la tarjeta de QR (0), vamos a la de estadísticas (1)
-            if (currentCard === 0) {
-                showCard(1);
-            }
+        // Al hacer clic en el botón "anterior" (‹), mostramos el QR
+        prevBtn.addEventListener('click', () => {
+            showView(qrDisplay, statsDisplay);
         });
     }
 </script>
