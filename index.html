@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de QR Dinámico - Elegante</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Ya no necesitamos la librería qrcode.min.js, así que la podemos quitar -->
     <style>
         /* --- ESTILOS BASE (SIN CAMBIOS ) --- */
         :root {
@@ -60,8 +60,11 @@
         .success-message { color: var(--color-dorado); font-size: 14px; margin-top: 10px; text-align: center; }
         .button-group { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
         .qr-section { text-align: center; margin-bottom: 30px; padding: 20px; background-color: var(--color-blanco); border-radius: 8px; border: 2px solid var(--color-dorado); position: relative; height: 220px; display: flex; justify-content: center; align-items: center; }
-        #qr-display, #stats-display { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: absolute; transition: opacity 0.4s ease-in-out; }
-        #qrCode { padding: 10px; background-color: var(--color-blanco); border-radius: 4px; }
+        
+        /* --- ¡CAMBIOS AQUÍ! --- */
+        #welcome-display, #stats-display { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: absolute; transition: opacity 0.4s ease-in-out; padding: 10px; }
+        #welcome-display h3 { font-size: 24px; color: var(--color-texto); font-weight: 300; }
+        #welcome-display .username { font-size: 48px; color: var(--color-dorado); font-weight: bold; line-height: 1.2; word-break: break-all; }
         #stats-display { opacity: 0; pointer-events: none; }
         #stats-display h3 { color: var(--color-texto); font-size: 18px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
         #stats-display .visits-count { font-size: 64px; font-weight: bold; color: var(--color-dorado); line-height: 1; }
@@ -105,18 +108,22 @@
         <div id="mainScreen" class="main-container">
             <div class="main-content">
                 <div class="main-header">
-                    <h1>Tu QR Dinámico</h1>
-                    <p>Gestiona tu código QR y cambios de dirección</p>
+                    <h1>Tu Panel de Control</h1>
+                    <p>Gestiona tu URL y consulta tus visitas</p>
                 </div>
                 
                 <div class="qr-section">
-                    <div id="qr-display">
-                        <div id="qrCode"></div>
+                    <!-- ¡CAMBIO AQUÍ! Vista de bienvenida -->
+                    <div id="welcome-display">
+                        <h3>Bienvenido</h3>
+                        <p class="username" id="welcomeUsername"></p>
                     </div>
+                    <!-- Vista para las Estadísticas (sin cambios) -->
                     <div id="stats-display">
                         <h3>Total de Visitas</h3>
                         <p class="visits-count" id="visitsCount">0</p>
                     </div>
+                    <!-- Botones de Navegación (sin cambios) -->
                     <button id="prev-btn" class="nav-arrow">‹</button>
                     <button id="next-btn" class="nav-arrow">›</button>
                 </div>
@@ -229,29 +236,19 @@
         }
     }
 
+    // --- ¡FUNCIÓN MODIFICADA! ---
     function loadUserData() {
         if (!currentUserData) return;
         document.getElementById('urlInput').value = currentUserData.url_activo;
-        generateQRCode(currentUserData.qr_imagen);
-        renderScheduleItems();
+        // Mostramos el nombre de usuario y las visitas
+        document.getElementById('welcomeUsername').textContent = currentUserData.usuario;
         document.getElementById('visitsCount').textContent = currentUserData.visitas || 0;
+        renderScheduleItems();
     }
 
     function logout() { currentUserData = null; showLoginScreen(); }
 
-    // 4. FUNCIONALIDAD DEL QR Y URL (¡CORREGIDO!)
-    function generateQRCode(imageUrl) {
-        const qrCodeDiv = document.getElementById('qrCode');
-        qrCodeDiv.innerHTML = '';
-        if (imageUrl) {
-            const img = document.createElement('img');
-            img.src = imageUrl; 
-            img.style.width = '180px';
-            img.style.height = '180px';
-            img.style.objectFit = 'contain';
-            qrCodeDiv.appendChild(img);
-        }
-    }
+    // 4. FUNCIONALIDAD DE LA URL (generateQRCode eliminada)
     function enableEditUrl() { const urlInput = document.getElementById('urlInput'); urlInput.readOnly = false; urlInput.focus(); urlInput.select(); }
     function formatarUrlInteligente(url) {
         if (!url || url.trim() === '') return '';
@@ -275,7 +272,6 @@
             const { error } = await supabase.from('qrs').update({ url_activo: urlFormateada }).eq('id', currentUserData.id);
             if (error) throw error;
             currentUserData.url_activo = urlFormateada;
-            generateQRCode(currentUserData.qr_imagen);
             urlInput.readOnly = true;
             progressBar.style.display = 'none';
             updateMessage.style.display = 'block';
@@ -286,7 +282,7 @@
         }
     }
 
-    // 5. LÓGICA DE MODALES (¡CORREGIDO!)
+    // 5. LÓGICA DE MODALES (SIN CAMBIOS)
     function openScheduleModal() { document.getElementById('scheduleModal').style.display = 'block'; }
     function closeScheduleModal() { document.getElementById('scheduleModal').style.display = 'none'; }
     function openSettingsModal() { 
@@ -353,9 +349,9 @@
         if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
     }
 
-    // 6. LÓGICA PARA INTERCAMBIAR VISTAS
+    // 6. LÓGICA PARA INTERCAMBIAR VISTAS (¡MODIFICADA!)
     function setupToggleButtons() {
-        const qrDisplay = document.getElementById('qr-display');
+        const welcomeDisplay = document.getElementById('welcome-display');
         const statsDisplay = document.getElementById('stats-display');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
@@ -365,8 +361,8 @@
             viewToHide.style.opacity = '0';
             viewToHide.style.pointerEvents = 'none';
         };
-        nextBtn.addEventListener('click', () => { showView(statsDisplay, qrDisplay); });
-        prevBtn.addEventListener('click', () => { showView(qrDisplay, statsDisplay); });
+        nextBtn.addEventListener('click', () => { showView(statsDisplay, welcomeDisplay); });
+        prevBtn.addEventListener('click', () => { showView(welcomeDisplay, statsDisplay); });
     }
 </script>
 </body>
